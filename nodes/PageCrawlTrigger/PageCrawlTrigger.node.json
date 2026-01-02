@@ -1,0 +1,22 @@
+{
+	"node": "n8n-nodes-pagecrawl.PageCrawlTrigger",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["Marketing & Content"],
+	"resources": {
+		"credentialDocumentation": [
+			{
+				"url": "https://pagecrawl.io/docs/api"
+			}
+		],
+		"primaryDocumentation": [
+			{
+				"url": "https://pagecrawl.io/docs"
+			}
+		]
+	},
+	"alias": ["Webhook", "Change Detection", "Monitor", "Website Trigger"],
+	"subcategories": {
+		"Marketing & Content": ["Automation"]
+	}
+}

@@ -1,0 +1,64 @@
+{
+  "name": "@pagecrawl/n8n-nodes-pagecrawl",
+  "version": "0.1.0",
+  "description": "n8n node for PageCrawl.io - Website monitoring and change detection",
+  "keywords": [
+    "n8n",
+    "n8n-community-node-package",
+    "website-monitoring",
+    "change-detection",
+    "web-scraping",
+    "pagecrawl",
+    "automation"
+  ],
+  "license": "MIT",
+  "homepage": "https://pagecrawl.io",
+  "author": {
+    "name": "PageCrawl.io",
+    "email": "support@pagecrawl.io"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pagecrawl/n8n-nodes-pagecrawl.git"
+  },
+  "bugs": {
+    "url": "https://github.com/pagecrawl/n8n-nodes-pagecrawl/issues"
+  },
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc && cp nodes/PageCrawl/pagecrawl.svg dist/nodes/PageCrawl/ && cp nodes/PageCrawlTrigger/pagecrawl.svg dist/nodes/PageCrawlTrigger/",
+    "dev": "npm run build && npx n8n start",
+    "dev:build": "npm run build",
+    "n8n:start": "npx n8n start",
+    "lint": "eslint nodes credentials --ext .ts",
+    "lint:fix": "eslint nodes credentials --ext .ts --fix",
+    "link": "npm run build && npm link",
+    "test": "jest"
+  },
+  "files": [
+    "dist"
+  ],
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": [
+      "dist/credentials/PageCrawlApi.credentials.js"
+    ],
+    "nodes": [
+      "dist/nodes/PageCrawl/PageCrawl.node.js",
+      "dist/nodes/PageCrawlTrigger/PageCrawlTrigger.node.js"
+    ]
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.56.0",
+    "eslint-plugin-n8n-nodes-base": "^1.16.0",
+    "n8n": "^1.115.3",
+    "n8n-workflow": "~1.113.0",
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "n8n-workflow": "~1.113.0"
+  }
+}

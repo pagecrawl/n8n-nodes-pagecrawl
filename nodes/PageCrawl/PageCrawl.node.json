@@ -1,0 +1,22 @@
+{
+	"node": "n8n-nodes-pagecrawl.PageCrawl",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["Marketing & Content"],
+	"resources": {
+		"credentialDocumentation": [
+			{
+				"url": "https://pagecrawl.io/docs/api"
+			}
+		],
+		"primaryDocumentation": [
+			{
+				"url": "https://pagecrawl.io/docs"
+			}
+		]
+	},
+	"alias": ["Monitor", "Track", "Website", "Change Detection", "Web Scraping"],
+	"subcategories": {
+		"Marketing & Content": ["Automation", "Analytics"]
+	}
+}

@@ -1,0 +1,11 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+*.js
+*.d.ts
+*.js.map
+!nodes/**/*.json
+.env
+.vscode/
+.idea/

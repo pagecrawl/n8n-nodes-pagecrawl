@@ -1,0 +1,37 @@
+# Source files
+nodes/
+credentials/
+icons/
+
+# TypeScript
+*.ts
+tsconfig.json
+
+# Development
+.eslintrc.js
+.prettierrc
+DEVELOPMENT.md
+jest.config.js
+
+# Build artifacts (keep dist/)
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test files
+__tests__/
+*.test.ts
+*.spec.ts
+coverage/
+
+# Git
+.git/
+.gitignore
