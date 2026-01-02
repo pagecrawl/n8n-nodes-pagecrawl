@@ -4,6 +4,9 @@ import {
 	INodeType,
 	INodeTypeDescription,
 	NodeOperationError,
+	ILoadOptionsFunctions,
+	INodeListSearchResult,
+	IDataObject,
 } from 'n8n-workflow';
 
 import { pageOperations, pageFields } from './descriptions/PageDescription';
@@ -32,7 +35,7 @@ export class PageCrawl implements INodeType {
 			},
 		],
 		requestDefaults: {
-			baseURL: '={{$credentials.baseUrl}}/api',
+			baseURL: 'https://pagecrawl.io/api',
 			headers: {
 				Accept: 'application/json',
 				'Content-Type': 'application/json',
@@ -79,11 +82,57 @@ export class PageCrawl implements INodeType {
 		],
 	};
 
+	methods = {
+		listSearch: {
+			async pageSearch(
+				this: ILoadOptionsFunctions,
+				filter?: string,
+			): Promise<INodeListSearchResult> {
+				const baseUrl = 'https://pagecrawl.io';
+
+				const response = await this.helpers.httpRequestWithAuthentication.call(
+					this,
+					'pageCrawlApi',
+					{
+						method: 'GET',
+						url: `${baseUrl}/api/pages`,
+						json: true,
+					},
+				);
+
+				const pages = response.data || response;
+
+				let results = pages.map((page: any) => ({
+					name: page.name || page.url,
+					value: page.slug,
+					url: `https://pagecrawl.io/app/pages/${page.slug}`,
+				}));
+
+				// Filter results if search term provided
+				if (filter) {
+					const filterLower = filter.toLowerCase();
+					results = results.filter(
+						(page: any) =>
+							page.name.toLowerCase().includes(filterLower) ||
+							page.value.toLowerCase().includes(filterLower),
+					);
+				}
+
+				return { results };
+			},
+		},
+	};
+
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const items = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
-		const credentials = await this.getCredentials('pageCrawlApi');
-		const baseUrl = ((credentials.baseUrl as string) || 'https://pagecrawl.io').replace(/\/+$/, '');
+		const baseUrl = 'https://pagecrawl.io';
+
+		// Helper to extract value from resourceLocator
+		const getPageId = (index: number): string => {
+			const pageLocator = this.getNodeParameter('pageId', index) as IDataObject;
+			return (pageLocator.value as string) || '';
+		};
 
 		for (let i = 0; i < items.length; i++) {
 			const resource = this.getNodeParameter('resource', i) as string;
@@ -128,7 +177,7 @@ export class PageCrawl implements INodeType {
 							responseData = responseData.slice(0, qs.limit);
 						}
 					} else if (operation === 'get') {
-						const pageId = this.getNodeParameter('pageId', i) as string;
+						const pageId = getPageId(i);
 						const options = this.getNodeParameter('options', i) as any;
 						const qs: any = {};
 
@@ -235,7 +284,7 @@ export class PageCrawl implements INodeType {
 							},
 						);
 					} else if (operation === 'update') {
-						const pageId = this.getNodeParameter('pageId', i) as string;
+						const pageId = getPageId(i);
 						const updateFields = this.getNodeParameter('updateFields', i) as any;
 						const additionalFields = this.getNodeParameter('additionalFields', i) as any;
 
@@ -292,7 +341,7 @@ export class PageCrawl implements INodeType {
 							},
 						);
 					} else if (operation === 'delete') {
-						const pageId = this.getNodeParameter('pageId', i) as string;
+						const pageId = getPageId(i);
 
 						responseData = await this.helpers.httpRequestWithAuthentication.call(
 							this,
@@ -306,7 +355,7 @@ export class PageCrawl implements INodeType {
 
 						responseData = { success: true, deleted: pageId };
 					} else if (operation === 'runCheckNow') {
-						const pageId = this.getNodeParameter('pageId', i) as string;
+						const pageId = getPageId(i);
 						const options = this.getNodeParameter('runCheckOptions', i) as any;
 						const qs: any = {};
 
@@ -328,7 +377,7 @@ export class PageCrawl implements INodeType {
 						responseData = { success: true, message: 'Check triggered', pageId };
 					}
 				} else if (resource === 'check') {
-					const pageId = this.getNodeParameter('pageId', i) as string;
+					const pageId = getPageId(i);
 
 					if (operation === 'getHistory') {
 						const options = this.getNodeParameter('options', i) as any;
@@ -419,7 +468,7 @@ export class PageCrawl implements INodeType {
 						};
 					}
 				} else if (resource === 'screenshot') {
-					const pageId = this.getNodeParameter('pageId', i) as string;
+					const pageId = getPageId(i);
 					let endpoint = '';
 
 					if (operation === 'getLatest') {

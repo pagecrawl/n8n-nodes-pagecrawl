@@ -30,15 +30,8 @@ describe('PageCrawlApi Credentials', () => {
 			expect(apiTokenProp?.typeOptions?.password).toBe(true);
 		});
 
-		it('should have baseUrl property', () => {
-			const baseUrlProp = credentials.properties.find((p) => p.name === 'baseUrl');
-			expect(baseUrlProp).toBeDefined();
-			expect(baseUrlProp?.type).toBe('string');
-			expect(baseUrlProp?.default).toBe('https://pagecrawl.io');
-		});
-
-		it('should have exactly 2 properties', () => {
-			expect(credentials.properties).toHaveLength(2);
+		it('should have exactly 1 property (only API token)', () => {
+			expect(credentials.properties).toHaveLength(1);
 		});
 	});
 
@@ -64,15 +57,8 @@ describe('PageCrawlApi Credentials', () => {
 			expect(credentials.test.request.method).toBe('GET');
 		});
 
-		it('should use baseUrl from credentials', () => {
-			expect(credentials.test.request.baseURL).toBe('={{$credentials.baseUrl}}');
-		});
-
-		it('should have success validation rule', () => {
-			expect(credentials.test.rules).toBeDefined();
-			expect(credentials.test.rules).toHaveLength(1);
-			expect(credentials.test.rules?.[0].type).toBe('responseSuccessBody');
-			expect((credentials.test.rules?.[0].properties as { key: string }).key).toBe('id');
+		it('should use hardcoded pagecrawl.io base URL', () => {
+			expect(credentials.test.request.baseURL).toBe('https://pagecrawl.io');
 		});
 	});
 });

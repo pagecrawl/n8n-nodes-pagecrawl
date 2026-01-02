@@ -46,17 +46,58 @@ export const checkFields: INodeProperties[] = [
 	// check:getHistory
 	// ========================================
 	{
-		displayName: 'Page ID',
+		displayName: 'Page',
 		name: 'pageId',
-		type: 'string',
+		type: 'resourceLocator',
 		required: true,
 		displayOptions: {
 			show: {
 				resource: ['check'],
 			},
 		},
-		default: '',
-		description: 'The ID or slug of the page',
+		default: { mode: 'list', value: '' },
+		description: 'Select a page or enter slug/ID. <a href="https://pagecrawl.io/app/pages" target="_blank">View pages</a>.',
+		modes: [
+			{
+				displayName: 'From List',
+				name: 'list',
+				type: 'list',
+				typeOptions: {
+					searchListMethod: 'pageSearch',
+					searchable: true,
+				},
+			},
+			{
+				displayName: 'By Slug',
+				name: 'slug',
+				type: 'string',
+				placeholder: 'e.g. my-page-name',
+				validation: [
+					{
+						type: 'regex',
+						properties: {
+							regex: '^[a-z0-9-]+$',
+							errorMessage: 'Slug must contain only lowercase letters, numbers, and hyphens',
+						},
+					},
+				],
+			},
+			{
+				displayName: 'By ID',
+				name: 'id',
+				type: 'string',
+				placeholder: 'e.g. 12345',
+				validation: [
+					{
+						type: 'regex',
+						properties: {
+							regex: '^[0-9]+$',
+							errorMessage: 'ID must be a number',
+						},
+					},
+				],
+			},
+		],
 	},
 	{
 		displayName: 'Options',

@@ -133,7 +133,6 @@ export const WEBHOOK_PAYLOAD_FIELDS = [
 	'visual_diff',
 	'changed_at',
 	'contents',
-	'original',
 	'difference',
 	'human_difference',
 	'page_screenshot_image',

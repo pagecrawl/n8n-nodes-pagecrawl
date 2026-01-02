@@ -71,8 +71,8 @@ describe('PageCrawl Node', () => {
 	});
 
 	describe('Request Defaults', () => {
-		it('should have correct base URL template', () => {
-			expect(node.description.requestDefaults?.baseURL).toBe('={{$credentials.baseUrl}}/api');
+		it('should have hardcoded pagecrawl.io base URL', () => {
+			expect(node.description.requestDefaults?.baseURL).toBe('https://pagecrawl.io/api');
 		});
 
 		it('should have JSON content type headers', () => {
@@ -138,7 +138,7 @@ describe('PageCrawl Node Operations', () => {
 			mockExecuteFunctions.getNodeParameter
 				.mockReturnValueOnce('page') // resource
 				.mockReturnValueOnce('get') // operation
-				.mockReturnValueOnce('123') // pageId
+				.mockReturnValueOnce({ mode: 'slug', value: '123' }) // pageId (resourceLocator)
 				.mockReturnValueOnce({}); // options
 
 			mockExecuteFunctions.helpers.httpRequestWithAuthentication.call = jest
@@ -162,7 +162,7 @@ describe('PageCrawl Node Operations', () => {
 			mockExecuteFunctions.getNodeParameter
 				.mockReturnValueOnce('page') // resource
 				.mockReturnValueOnce('delete') // operation
-				.mockReturnValueOnce('123'); // pageId
+				.mockReturnValueOnce({ mode: 'slug', value: '123' }); // pageId (resourceLocator)
 
 			mockExecuteFunctions.helpers.httpRequestWithAuthentication.call = jest
 				.fn()
@@ -185,7 +185,7 @@ describe('PageCrawl Node Operations', () => {
 			mockExecuteFunctions.getNodeParameter
 				.mockReturnValueOnce('page') // resource
 				.mockReturnValueOnce('runCheckNow') // operation
-				.mockReturnValueOnce('123') // pageId
+				.mockReturnValueOnce({ mode: 'slug', value: '123' }) // pageId (resourceLocator)
 				.mockReturnValueOnce({}); // runCheckOptions
 
 			mockExecuteFunctions.helpers.httpRequestWithAuthentication.call = jest

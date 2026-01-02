@@ -5,6 +5,8 @@ import {
 	INodeType,
 	INodeTypeDescription,
 	IWebhookResponseData,
+	ILoadOptionsFunctions,
+	INodeListSearchResult,
 } from 'n8n-workflow';
 
 import { WEBHOOK_PAYLOAD_FIELDS } from '../PageCrawl/types';
@@ -60,10 +62,51 @@ export class PageCrawlTrigger implements INodeType {
 			},
 			{
 				displayName: 'Page',
-				name: 'pageId',
-				type: 'string',
-				default: '',
-				description: 'Specific page ID to monitor (leave empty for all pages)',
+				name: 'page',
+				type: 'resourceLocator',
+				default: { mode: 'list', value: '' },
+				description: 'Select a page to monitor or leave empty for all pages. Don\'t see your page? <a href="https://pagecrawl.io/app/pages" target="_blank">Create one on PageCrawl</a>.',
+				modes: [
+					{
+						displayName: 'From List',
+						name: 'list',
+						type: 'list',
+						typeOptions: {
+							searchListMethod: 'pageSearch',
+							searchable: true,
+						},
+					},
+					{
+						displayName: 'By Slug',
+						name: 'slug',
+						type: 'string',
+						placeholder: 'e.g. my-page-name',
+						validation: [
+							{
+								type: 'regex',
+								properties: {
+									regex: '^[a-z0-9-]+$',
+									errorMessage: 'Slug must contain only lowercase letters, numbers, and hyphens',
+								},
+							},
+						],
+					},
+					{
+						displayName: 'By ID',
+						name: 'id',
+						type: 'string',
+						placeholder: 'e.g. 12345',
+						validation: [
+							{
+								type: 'regex',
+								properties: {
+									regex: '^[0-9]+$',
+									errorMessage: 'ID must be a number',
+								},
+							},
+						],
+					},
+				],
 			},
 			{
 				displayName: 'Payload Fields',
@@ -73,7 +116,7 @@ export class PageCrawlTrigger implements INodeType {
 					name: field.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
 					value: field,
 				})),
-				default: ['id', 'title', 'status', 'changed_at', 'difference', 'page'],
+				default: ['id', 'title', 'status', 'changed_at', 'difference', 'page', 'contents', 'html_difference'],
 				description: 'Fields to include in the webhook payload',
 			},
 			{
@@ -95,13 +138,53 @@ export class PageCrawlTrigger implements INodeType {
 		],
 	};
 
+	methods = {
+		listSearch: {
+			async pageSearch(
+				this: ILoadOptionsFunctions,
+				filter?: string,
+			): Promise<INodeListSearchResult> {
+				const baseUrl = 'https://pagecrawl.io';
+
+				const response = await this.helpers.httpRequestWithAuthentication.call(
+					this,
+					'pageCrawlApi',
+					{
+						method: 'GET',
+						url: `${baseUrl}/api/pages`,
+						json: true,
+					},
+				);
+
+				const pages = response.data || response;
+
+				let results = pages.map((page: any) => ({
+					name: page.name || page.url,
+					value: page.slug,
+					url: `https://pagecrawl.io/app/pages/${page.slug}`,
+				}));
+
+				// Filter results if search term provided
+				if (filter) {
+					const filterLower = filter.toLowerCase();
+					results = results.filter(
+						(page: any) =>
+							page.name.toLowerCase().includes(filterLower) ||
+							page.value.toLowerCase().includes(filterLower),
+					);
+				}
+
+				return { results };
+			},
+		},
+	};
+
 	webhookMethods = {
 		default: {
 			async checkExists(this: IHookFunctions): Promise<boolean> {
 				const webhookData = this.getWorkflowStaticData('node');
 				const webhookUrl = this.getNodeWebhookUrl('default');
-				const credentials = await this.getCredentials('pageCrawlApi');
-				const baseUrl = ((credentials.baseUrl as string) || 'https://pagecrawl.io').replace(/\/+$/, '');
+				const baseUrl = 'https://pagecrawl.io';
 
 				if (!webhookData.webhookId) {
 					return false;
@@ -135,18 +218,18 @@ export class PageCrawlTrigger implements INodeType {
 			async create(this: IHookFunctions): Promise<boolean> {
 				const webhookUrl = this.getNodeWebhookUrl('default');
 				const webhookData = this.getWorkflowStaticData('node');
-				const pageId = this.getNodeParameter('pageId', '') as string;
+				const pageLocator = this.getNodeParameter('page', { mode: 'list', value: '' }) as IDataObject;
+				const pageValue = (pageLocator.value as string) || '';
 				const payloadFields = this.getNodeParameter('payloadFields', []) as string[];
-				const credentials = await this.getCredentials('pageCrawlApi');
-				const baseUrl = ((credentials.baseUrl as string) || 'https://pagecrawl.io').replace(/\/+$/, '');
+				const baseUrl = 'https://pagecrawl.io';
 
 				const body: IDataObject = {
 					target_url: webhookUrl,
 					event_type: 'n8n',
 				};
 
-				if (pageId) {
-					body.change_id = pageId;
+				if (pageValue) {
+					body.change_id = pageValue;
 				}
 
 				if (payloadFields.length > 0) {
@@ -179,8 +262,7 @@ export class PageCrawlTrigger implements INodeType {
 
 			async delete(this: IHookFunctions): Promise<boolean> {
 				const webhookData = this.getWorkflowStaticData('node');
-				const credentials = await this.getCredentials('pageCrawlApi');
-				const baseUrl = ((credentials.baseUrl as string) || 'https://pagecrawl.io').replace(/\/+$/, '');
+				const baseUrl = 'https://pagecrawl.io';
 
 				if (!webhookData.webhookId) {
 					return true;

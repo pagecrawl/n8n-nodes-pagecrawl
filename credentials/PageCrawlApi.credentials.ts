@@ -19,15 +19,7 @@ export class PageCrawlApi implements ICredentialType {
 			},
 			default: '',
 			required: true,
-			description: 'Your PageCrawl.io API token. API access requires a paid plan. You can find your token in Settings > API.',
-		},
-		{
-			displayName: 'Base URL',
-			name: 'baseUrl',
-			type: 'string',
-			default: 'https://pagecrawl.io',
-			description: 'The base URL for the PageCrawl.io API',
-			hint: 'Use https://pagecrawl.io for production',
+			description: 'Your PageCrawl.io API token. API access requires a paid plan. Find your token at Settings > API.',
 		},
 	];
 
@@ -42,19 +34,9 @@ export class PageCrawlApi implements ICredentialType {
 
 	test: ICredentialTestRequest = {
 		request: {
-			baseURL: '={{$credentials.baseUrl}}',
+			baseURL: 'https://pagecrawl.io',
 			url: '/api/user',
 			method: 'GET',
 		},
-		rules: [
-			{
-				type: 'responseSuccessBody',
-				properties: {
-					key: 'id',
-					value: undefined,
-					message: 'Authentication successful',
-				},
-			},
-		],
 	};
 }

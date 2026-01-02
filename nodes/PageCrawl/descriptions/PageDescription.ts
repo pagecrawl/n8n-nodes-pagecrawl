@@ -14,15 +14,15 @@ export const pageOperations: INodeProperties[] = [
 		options: [
 			{
 				name: 'Create',
-				value: 'create',
-				description: 'Create a new tracked page',
+				value: 'createSimple',
+				description: 'Create a new tracked page with guided options',
 				action: 'Create a page',
 			},
 			{
-				name: 'Create Simple',
-				value: 'createSimple',
-				description: 'Create a page with simplified options',
-				action: 'Create a simple page',
+				name: 'Create (Advanced)',
+				value: 'create',
+				description: 'Create a page with full configuration options',
+				action: 'Create an advanced page',
 			},
 			{
 				name: 'Delete',
@@ -134,9 +134,9 @@ export const pageFields: INodeProperties[] = [
 	// page:get
 	// ========================================
 	{
-		displayName: 'Page ID',
+		displayName: 'Page',
 		name: 'pageId',
-		type: 'string',
+		type: 'resourceLocator',
 		required: true,
 		displayOptions: {
 			show: {
@@ -144,8 +144,49 @@ export const pageFields: INodeProperties[] = [
 				operation: ['get', 'update', 'delete', 'runCheckNow'],
 			},
 		},
-		default: '',
-		description: 'The ID or slug of the page',
+		default: { mode: 'list', value: '' },
+		description: 'Select a page or enter slug/ID. <a href="https://pagecrawl.io/app/pages" target="_blank">View pages</a>.',
+		modes: [
+			{
+				displayName: 'From List',
+				name: 'list',
+				type: 'list',
+				typeOptions: {
+					searchListMethod: 'pageSearch',
+					searchable: true,
+				},
+			},
+			{
+				displayName: 'By Slug',
+				name: 'slug',
+				type: 'string',
+				placeholder: 'e.g. my-page-name',
+				validation: [
+					{
+						type: 'regex',
+						properties: {
+							regex: '^[a-z0-9-]+$',
+							errorMessage: 'Slug must contain only lowercase letters, numbers, and hyphens',
+						},
+					},
+				],
+			},
+			{
+				displayName: 'By ID',
+				name: 'id',
+				type: 'string',
+				placeholder: 'e.g. 12345',
+				validation: [
+					{
+						type: 'regex',
+						properties: {
+							regex: '^[0-9]+$',
+							errorMessage: 'ID must be a number',
+						},
+					},
+				],
+			},
+		],
 	},
 	{
 		displayName: 'Options',
@@ -218,6 +259,89 @@ export const pageFields: INodeProperties[] = [
 		description: 'The URL to track',
 	},
 	{
+		displayName: 'Tracking Type',
+		name: 'trackingType',
+		type: 'options',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['page'],
+				operation: ['createSimple'],
+			},
+		},
+		options: [
+			{
+				name: 'Full Page',
+				value: 'fullpage',
+				description: 'Track the entire page for changes',
+			},
+			{
+				name: 'Selected Area',
+				value: 'text',
+				description: 'Track a specific area using CSS/XPath selector',
+			},
+			{
+				name: 'Number',
+				value: 'number',
+				description: 'Track a numeric value (e.g., stock count, ratings)',
+			},
+			{
+				name: 'Price',
+				value: 'price',
+				description: 'Auto-detect and track price changes',
+			},
+		],
+		default: 'fullpage',
+		description: 'What type of content to track',
+	},
+	{
+		displayName: 'Full Page Mode',
+		name: 'fullpageMode',
+		type: 'options',
+		displayOptions: {
+			show: {
+				resource: ['page'],
+				operation: ['createSimple'],
+				trackingType: ['fullpage'],
+			},
+		},
+		options: [
+			{
+				name: 'Everything On Page',
+				value: 'everything',
+				description: 'Track all visible content on the page',
+			},
+			{
+				name: 'Content Only',
+				value: 'content',
+				description: 'Track main content, ignoring navigation and sidebars',
+			},
+			{
+				name: 'Reader Mode',
+				value: 'reader',
+				description: 'Extract and track article content only',
+			},
+		],
+		default: 'everything',
+		description: 'How to extract page content',
+	},
+	{
+		displayName: 'CSS/XPath Selector',
+		name: 'selector',
+		type: 'string',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['page'],
+				operation: ['createSimple'],
+				trackingType: ['text', 'number'],
+			},
+		},
+		default: '',
+		placeholder: 'e.g. .price, #stock-count, //div[@class="value"]',
+		description: 'CSS selector or XPath expression to locate the element',
+	},
+	{
 		displayName: 'Additional Fields',
 		name: 'additionalFields',
 		type: 'collection',
@@ -230,13 +354,6 @@ export const pageFields: INodeProperties[] = [
 			},
 		},
 		options: [
-			{
-				displayName: 'CSS/XPath Selector',
-				name: 'selector',
-				type: 'string',
-				default: '',
-				description: 'CSS or XPath selector. If empty, tracks full page.',
-			},
 			{
 				displayName: 'Frequency',
 				name: 'frequency',

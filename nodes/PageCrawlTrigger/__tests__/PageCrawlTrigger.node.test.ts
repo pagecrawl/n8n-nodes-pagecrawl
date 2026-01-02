@@ -67,11 +67,11 @@ describe('PageCrawlTrigger Node', () => {
 			expect(eventValues).toContain('error');
 		});
 
-		it('should have pageId property', () => {
-			const pageIdProperty = node.description.properties.find((p) => p.name === 'pageId');
-			expect(pageIdProperty).toBeDefined();
-			expect(pageIdProperty?.type).toBe('string');
-			expect(pageIdProperty?.default).toBe('');
+		it('should have page resourceLocator property', () => {
+			const pageProperty = node.description.properties.find((p) => p.name === 'page');
+			expect(pageProperty).toBeDefined();
+			expect(pageProperty?.type).toBe('resourceLocator');
+			expect(pageProperty?.default).toEqual({ mode: 'list', value: '' });
 		});
 
 		it('should have payloadFields property', () => {
@@ -194,7 +194,7 @@ describe('PageCrawlTrigger Webhook Methods', () => {
 
 			mockHookFunctions.getWorkflowStaticData.mockReturnValue(webhookData);
 			mockHookFunctions.getNodeParameter
-				.mockReturnValueOnce('') // pageId
+				.mockReturnValueOnce({ mode: 'list', value: '' }) // page (resourceLocator)
 				.mockReturnValueOnce(['id', 'title', 'status']); // payloadFields
 
 			mockHookFunctions.helpers.httpRequestWithAuthentication.call = jest
@@ -216,12 +216,12 @@ describe('PageCrawlTrigger Webhook Methods', () => {
 			);
 		});
 
-		it('should include pageId when provided', async () => {
+		it('should include page value when provided', async () => {
 			const webhookData: IDataObject = {};
 
 			mockHookFunctions.getWorkflowStaticData.mockReturnValue(webhookData);
 			mockHookFunctions.getNodeParameter
-				.mockReturnValueOnce('page-123') // pageId
+				.mockReturnValueOnce({ mode: 'slug', value: 'page-123' }) // page (resourceLocator)
 				.mockReturnValueOnce([]); // payloadFields
 
 			mockHookFunctions.helpers.httpRequestWithAuthentication.call = jest
