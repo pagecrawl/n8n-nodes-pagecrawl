@@ -8,4 +8,4 @@ dist/
 !nodes/**/*.json
 .env
 .vscode/
-.idea/
+.idea/package-lock.json

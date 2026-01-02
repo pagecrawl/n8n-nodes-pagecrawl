@@ -1,41 +1,14 @@
-# n8n-nodes-pagecrawl
+# @pagecrawl/n8n-nodes-pagecrawl
 
 This is an n8n community node that provides integration with [PageCrawl.io](https://pagecrawl.io) for website monitoring and change detection.
 
 ## Installation
 
-### Community Node (Recommended)
-
 You can install this node directly in n8n:
 
 1. Go to **Settings** > **Community Nodes**
-2. Search for `n8n-nodes-pagecrawl`
+2. Search for `@pagecrawl/n8n-nodes-pagecrawl`
 3. Click **Install**
-
-### Manual Installation
-
-```bash
-npm install n8n-nodes-pagecrawl
-```
-
-### Local Development
-
-For development and testing:
-
-```bash
-# Clone the repository
-git clone https://github.com/pagecrawl/n8n-nodes-pagecrawl.git
-cd n8n-nodes-pagecrawl
-
-# Install dependencies
-npm install
-
-# Build the node
-npm run build
-
-# Run n8n with the node
-npm run dev
-```
 
 ## Authentication
 
@@ -188,34 +161,6 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 3. Commit your changes
 4. Push to the branch
 5. Open a Pull Request
-
-## Development
-
-### Building
-
-```bash
-npm run build
-```
-
-### Testing
-
-```bash
-# Run linter
-npm run lint
-
-# Fix linting issues
-npm run lint:fix
-
-# Test in n8n
-npm run dev
-```
-
-### Publishing
-
-```bash
-npm version patch
-npm publish
-```
 
 ## Changelog
 
