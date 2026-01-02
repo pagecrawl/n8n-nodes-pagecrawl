@@ -133,7 +133,6 @@ export const WEBHOOK_PAYLOAD_FIELDS = [
 	'visual_diff',
 	'changed_at',
 	'contents',
-	'elements',
 	'original',
 	'difference',
 	'human_difference',
@@ -146,4 +145,6 @@ export const WEBHOOK_PAYLOAD_FIELDS = [
 	'json',
 	'json_patch',
 	'previous_check',
+	'ai_summary',
+	'ai_priority_score',
 ];
