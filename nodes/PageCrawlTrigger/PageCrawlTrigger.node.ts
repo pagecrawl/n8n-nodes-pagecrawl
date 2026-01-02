@@ -108,7 +108,7 @@ export class PageCrawlTrigger implements INodeType {
 				}
 
 				try {
-					const response = await this.helpers.requestWithAuthentication.call(
+					const response = await this.helpers.httpRequestWithAuthentication.call(
 						this,
 						'pageCrawlApi',
 						{
@@ -154,7 +154,7 @@ export class PageCrawlTrigger implements INodeType {
 				}
 
 				try {
-					const response = await this.helpers.requestWithAuthentication.call(
+					const response = await this.helpers.httpRequestWithAuthentication.call(
 						this,
 						'pageCrawlApi',
 						{
@@ -187,7 +187,7 @@ export class PageCrawlTrigger implements INodeType {
 				}
 
 				try {
-					await this.helpers.requestWithAuthentication.call(
+					await this.helpers.httpRequestWithAuthentication.call(
 						this,
 						'pageCrawlApi',
 						{

@@ -113,7 +113,7 @@ export class PageCrawl implements INodeType {
 							qs.limit = this.getNodeParameter('limit', i) as number;
 						}
 
-						responseData = await this.helpers.requestWithAuthentication.call(
+						responseData = await this.helpers.httpRequestWithAuthentication.call(
 							this,
 							'pageCrawlApi',
 							{
@@ -139,7 +139,7 @@ export class PageCrawl implements INodeType {
 							qs.take = options.take;
 						}
 
-						responseData = await this.helpers.requestWithAuthentication.call(
+						responseData = await this.helpers.httpRequestWithAuthentication.call(
 							this,
 							'pageCrawlApi',
 							{
@@ -164,7 +164,7 @@ export class PageCrawl implements INodeType {
 							body.ignore_duplicates = additionalFields.ignore_duplicates;
 						}
 
-						responseData = await this.helpers.requestWithAuthentication.call(
+						responseData = await this.helpers.httpRequestWithAuthentication.call(
 							this,
 							'pageCrawlApi',
 							{
@@ -224,7 +224,7 @@ export class PageCrawl implements INodeType {
 							}
 						}
 
-						responseData = await this.helpers.requestWithAuthentication.call(
+						responseData = await this.helpers.httpRequestWithAuthentication.call(
 							this,
 							'pageCrawlApi',
 							{
@@ -281,7 +281,7 @@ export class PageCrawl implements INodeType {
 							}
 						}
 
-						responseData = await this.helpers.requestWithAuthentication.call(
+						responseData = await this.helpers.httpRequestWithAuthentication.call(
 							this,
 							'pageCrawlApi',
 							{
@@ -294,7 +294,7 @@ export class PageCrawl implements INodeType {
 					} else if (operation === 'delete') {
 						const pageId = this.getNodeParameter('pageId', i) as string;
 
-						responseData = await this.helpers.requestWithAuthentication.call(
+						responseData = await this.helpers.httpRequestWithAuthentication.call(
 							this,
 							'pageCrawlApi',
 							{
@@ -314,7 +314,7 @@ export class PageCrawl implements INodeType {
 							qs.skip_first_notification = 1;
 						}
 
-						responseData = await this.helpers.requestWithAuthentication.call(
+						responseData = await this.helpers.httpRequestWithAuthentication.call(
 							this,
 							'pageCrawlApi',
 							{
@@ -341,7 +341,7 @@ export class PageCrawl implements INodeType {
 							qs.take = options.take;
 						}
 
-						responseData = await this.helpers.requestWithAuthentication.call(
+						responseData = await this.helpers.httpRequestWithAuthentication.call(
 							this,
 							'pageCrawlApi',
 							{
@@ -354,7 +354,7 @@ export class PageCrawl implements INodeType {
 					} else if (operation === 'getDiffImage') {
 						const checkId = this.getNodeParameter('checkId', i) as string;
 
-						const response = await this.helpers.requestWithAuthentication.call(
+						const response = await this.helpers.httpRequestWithAuthentication.call(
 							this,
 							'pageCrawlApi',
 							{
@@ -380,7 +380,7 @@ export class PageCrawl implements INodeType {
 					} else if (operation === 'getDiffHtml') {
 						const checkId = this.getNodeParameter('checkId', i) as string;
 
-						const htmlContent = await this.helpers.requestWithAuthentication.call(
+						const htmlContent = await this.helpers.httpRequestWithAuthentication.call(
 							this,
 							'pageCrawlApi',
 							{
@@ -400,7 +400,7 @@ export class PageCrawl implements INodeType {
 					} else if (operation === 'getDiffMarkdown') {
 						const checkId = this.getNodeParameter('checkId', i) as string;
 
-						const markdownContent = await this.helpers.requestWithAuthentication.call(
+						const markdownContent = await this.helpers.httpRequestWithAuthentication.call(
 							this,
 							'pageCrawlApi',
 							{
@@ -434,7 +434,7 @@ export class PageCrawl implements INodeType {
 						endpoint = `/pages/${pageId}/checks/${checkId}/diff`;
 					}
 
-					const response = await this.helpers.requestWithAuthentication.call(
+					const response = await this.helpers.httpRequestWithAuthentication.call(
 						this,
 						'pageCrawlApi',
 						{
@@ -461,7 +461,7 @@ export class PageCrawl implements INodeType {
 					if (operation === 'getAll') {
 						const returnAll = this.getNodeParameter('returnAll', i) as boolean;
 
-						responseData = await this.helpers.requestWithAuthentication.call(
+						responseData = await this.helpers.httpRequestWithAuthentication.call(
 							this,
 							'pageCrawlApi',
 							{
@@ -488,7 +488,7 @@ export class PageCrawl implements INodeType {
 							body.payload_fields = additionalFields.payload_fields;
 						}
 
-						responseData = await this.helpers.requestWithAuthentication.call(
+						responseData = await this.helpers.httpRequestWithAuthentication.call(
 							this,
 							'pageCrawlApi',
 							{
@@ -502,7 +502,7 @@ export class PageCrawl implements INodeType {
 						const webhookId = this.getNodeParameter('webhookId', i) as string;
 						const updateFields = this.getNodeParameter('updateFields', i) as any;
 
-						responseData = await this.helpers.requestWithAuthentication.call(
+						responseData = await this.helpers.httpRequestWithAuthentication.call(
 							this,
 							'pageCrawlApi',
 							{
@@ -515,7 +515,7 @@ export class PageCrawl implements INodeType {
 					} else if (operation === 'delete') {
 						const webhookId = this.getNodeParameter('webhookId', i) as string;
 
-						responseData = await this.helpers.requestWithAuthentication.call(
+						responseData = await this.helpers.httpRequestWithAuthentication.call(
 							this,
 							'pageCrawlApi',
 							{
@@ -529,7 +529,7 @@ export class PageCrawl implements INodeType {
 					} else if (operation === 'test') {
 						const webhookId = this.getNodeParameter('webhookId', i) as string;
 
-						responseData = await this.helpers.requestWithAuthentication.call(
+						responseData = await this.helpers.httpRequestWithAuthentication.call(
 							this,
 							'pageCrawlApi',
 							{
