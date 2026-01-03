@@ -357,12 +357,12 @@ describe('PageCrawl Node Additional Fields', () => {
 	});
 
 	describe('Resource Locator Fields', () => {
-		it('should have workspace_id field as resourceLocator', () => {
-			const options = getAdditionalFieldsOptions();
-			const field = options.find((f: any) => f.name === 'workspace_id');
+		it('should have workspace field as top-level resourceLocator', () => {
+			const field = node.description.properties.find((p) => p.name === 'workspace');
 
 			expect(field).toBeDefined();
-			expect(field.type).toBe('resourceLocator');
+			expect(field?.type).toBe('resourceLocator');
+			expect(field?.required).toBe(true);
 		});
 
 		it('should have folder_id field as resourceLocator', () => {

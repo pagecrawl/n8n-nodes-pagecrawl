@@ -670,30 +670,6 @@ export const pageFields: INodeProperties[] = [
 				description: 'Comma-separated list of tags for the page',
 			},
 			{
-				displayName: 'Workspace',
-				name: 'workspace_id',
-				type: 'resourceLocator',
-				default: { mode: 'list', value: '' },
-				description: 'Save page in a specific workspace',
-				modes: [
-					{
-						displayName: 'From List',
-						name: 'list',
-						type: 'list',
-						typeOptions: {
-							searchListMethod: 'workspaceSearch',
-							searchable: true,
-						},
-					},
-					{
-						displayName: 'By ID',
-						name: 'id',
-						type: 'string',
-						placeholder: 'e.g. 123',
-					},
-				],
-			},
-			{
 				displayName: 'Folder',
 				name: 'folder_id',
 				type: 'resourceLocator',

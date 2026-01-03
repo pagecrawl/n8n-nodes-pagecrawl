@@ -65,6 +65,31 @@ export class PageCrawl implements INodeType {
 				],
 				default: 'page',
 			},
+			{
+				displayName: 'Workspace',
+				name: 'workspace',
+				type: 'resourceLocator',
+				required: true,
+				default: { mode: 'list', value: '' },
+				description: 'Select the workspace to use for this operation',
+				modes: [
+					{
+						displayName: 'From List',
+						name: 'list',
+						type: 'list',
+						typeOptions: {
+							searchListMethod: 'workspaceSearch',
+							searchable: true,
+						},
+					},
+					{
+						displayName: 'By ID',
+						name: 'id',
+						type: 'string',
+						placeholder: 'e.g. 123',
+					},
+				],
+			},
 			...pageOperations,
 			...pageFields,
 			...checkOperations,
