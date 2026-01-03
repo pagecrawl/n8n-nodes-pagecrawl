@@ -161,12 +161,13 @@ export class PageCrawlTrigger implements INodeType {
 						'pageCrawlApi',
 						{
 							method: 'GET',
-							url: `${baseUrl}/api/workspaces`,
+							url: `${baseUrl}/api/user`,
 							json: true,
 						},
 					);
 
-					let workspaces = response.data || response.workspaces || response;
+					// Extract workspaces from user response
+					let workspaces = response.workspaces || [];
 					if (!Array.isArray(workspaces)) {
 						return { results: [] };
 					}

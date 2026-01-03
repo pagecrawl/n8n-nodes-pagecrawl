@@ -218,13 +218,13 @@ export class PageCrawl implements INodeType {
 						'pageCrawlApi',
 						{
 							method: 'GET',
-							url: `${baseUrl}/api/workspaces`,
+							url: `${baseUrl}/api/user`,
 							json: true,
 						},
 					);
 
-					// Handle various response formats
-					let workspaces = response.data || response.workspaces || response;
+					// Extract workspaces from user response
+					let workspaces = response.workspaces || [];
 					if (!Array.isArray(workspaces)) {
 						return { results: [] };
 					}
