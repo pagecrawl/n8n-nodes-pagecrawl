@@ -56,12 +56,12 @@
     "eslint": "^8.56.0",
     "eslint-plugin-n8n-nodes-base": "^1.16.0",
     "jest": "^29.7.0",
-    "n8n": "^2.0.0",
-    "n8n-workflow": "~1.113.0",
+    "n8n": "^2.2.0",
+    "n8n-workflow": "~2.2.0",
     "ts-jest": "^29.4.6",
     "typescript": "^5.0.0"
   },
   "peerDependencies": {
-    "n8n-workflow": "~1.113.0"
+    "n8n-workflow": ">=1.0.0"
   }
 }
