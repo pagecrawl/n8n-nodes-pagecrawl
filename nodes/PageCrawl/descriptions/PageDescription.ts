@@ -546,7 +546,7 @@ export const pageFields: INodeProperties[] = [
 							{ name: 'Very High (50%)', value: 50 },
 							{ name: 'Extremely High (80%)', value: 80 },
 						],
-						default: 0,
+						default: null,
 						description: 'Minimum change percentage to trigger notification',
 					},
 				],

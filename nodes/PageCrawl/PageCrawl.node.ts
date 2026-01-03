@@ -370,8 +370,8 @@ export class PageCrawl implements INodeType {
 						},
 					);
 
-					// Extract workspaces from user response
-					let workspaces = response.workspaces || [];
+					// Extract workspaces from user response (may be nested under user)
+					let workspaces = response.workspaces || response.user?.workspaces || [];
 					if (!Array.isArray(workspaces)) {
 						return { results: [] };
 					}
