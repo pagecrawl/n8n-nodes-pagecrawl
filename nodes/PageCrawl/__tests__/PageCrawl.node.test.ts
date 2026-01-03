@@ -320,7 +320,7 @@ describe('PageCrawl Node Additional Fields', () => {
 
 			expect(field).toBeDefined();
 			expect(field?.type).toBe('resourceLocator');
-			expect(field?.required).toBe(true);
+			expect(field?.required).toBe(false); // Optional - auto-selects if user has only one workspace
 		});
 
 		it('should have folder_id field as resourceLocator', () => {

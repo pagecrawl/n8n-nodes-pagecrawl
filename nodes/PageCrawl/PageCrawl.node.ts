@@ -69,9 +69,9 @@ export class PageCrawl implements INodeType {
 				displayName: 'Workspace',
 				name: 'workspace',
 				type: 'resourceLocator',
-				required: true,
+				required: false,
 				default: { mode: 'list', value: '' },
-				description: 'Select the workspace to use for this operation',
+				description: 'Select workspace (auto-selected if you have only one)',
 				modes: [
 					{
 						displayName: 'From List',
@@ -513,6 +513,39 @@ export class PageCrawl implements INodeType {
 			return [];
 		};
 
+		// Helper to get workspace ID, auto-selecting if only one exists
+		const getWorkspaceId = async (index: number): Promise<string> => {
+			const workspaceLocator = this.getNodeParameter('workspace', index, {}) as IDataObject;
+			const workspaceId = (workspaceLocator?.value as string) || '';
+
+			if (workspaceId) {
+				return workspaceId;
+			}
+
+			// Fetch workspaces and auto-select if only one
+			const response = await this.helpers.httpRequestWithAuthentication.call(
+				this,
+				'pageCrawlApi',
+				{
+					method: 'GET',
+					url: `${baseUrl}/api/user`,
+					json: true,
+				},
+			);
+
+			const workspaces = response.workspaces || response.user?.workspaces || [];
+
+			if (workspaces.length === 1) {
+				return String(workspaces[0].id);
+			}
+
+			if (workspaces.length === 0) {
+				throw new NodeOperationError(this.getNode(), 'No workspaces found', { itemIndex: index });
+			}
+
+			throw new NodeOperationError(this.getNode(), 'Please select a workspace - multiple workspaces available', { itemIndex: index });
+		};
+
 		for (let i = 0; i < items.length; i++) {
 			const resource = this.getNodeParameter('resource', i) as string;
 			const operation = this.getNodeParameter('operation', i) as string;
@@ -635,6 +668,11 @@ export class PageCrawl implements INodeType {
 						if (!body.folder_id || body.folder_id === 0) delete body.folder_id;
 						if (!body.template_id || body.template_id === 0) delete body.template_id;
 						if (!body.auth_id || body.auth_id === 0) delete body.auth_id;
+
+						// Auto-select workspace if not set
+						if (!body.workspace_id) {
+							body.workspace_id = await getWorkspaceId(i);
+						}
 
 						// Transform fixedCollection fields to arrays
 						if (body.actions && typeof body.actions === 'object') {
