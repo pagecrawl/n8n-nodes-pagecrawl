@@ -55,18 +55,6 @@ describe('PageCrawlTrigger Node', () => {
 	});
 
 	describe('Node Properties', () => {
-		it('should have events property with correct options', () => {
-			const eventsProperty = node.description.properties.find((p) => p.name === 'events');
-			expect(eventsProperty).toBeDefined();
-			expect(eventsProperty?.type).toBe('multiOptions');
-			expect(eventsProperty?.required).toBe(true);
-
-			const options = eventsProperty?.options as Array<{ value: string }>;
-			const eventValues = options.map((o) => o.value);
-			expect(eventValues).toContain('change');
-			expect(eventValues).toContain('error');
-		});
-
 		it('should have page resourceLocator property', () => {
 			const pageProperty = node.description.properties.find((p) => p.name === 'page');
 			expect(pageProperty).toBeDefined();
@@ -82,14 +70,11 @@ describe('PageCrawlTrigger Node', () => {
 			expect(payloadFieldsProperty?.type).toBe('multiOptions');
 		});
 
-		it('should have options collection with simplify', () => {
-			const optionsProperty = node.description.properties.find((p) => p.name === 'options');
-			expect(optionsProperty).toBeDefined();
-			expect(optionsProperty?.type).toBe('collection');
-
-			const options = optionsProperty?.options as Array<{ name: string }>;
-			const optionNames = options.map((o) => o.name);
-			expect(optionNames).toContain('simplify');
+		it('should have simplifyOutput property with default true', () => {
+			const simplifyProperty = node.description.properties.find((p) => p.name === 'simplifyOutput');
+			expect(simplifyProperty).toBeDefined();
+			expect(simplifyProperty?.type).toBe('boolean');
+			expect(simplifyProperty?.default).toBe(true);
 		});
 	});
 
@@ -194,8 +179,10 @@ describe('PageCrawlTrigger Webhook Methods', () => {
 
 			mockHookFunctions.getWorkflowStaticData.mockReturnValue(webhookData);
 			mockHookFunctions.getNodeParameter
+				.mockReturnValueOnce({ mode: 'list', value: '1' }) // workspace (resourceLocator)
 				.mockReturnValueOnce({ mode: 'list', value: '' }) // page (resourceLocator)
-				.mockReturnValueOnce(['id', 'title', 'status']); // payloadFields
+				.mockReturnValueOnce(true) // simplifyOutput
+				.mockReturnValueOnce(false); // sendTestOnListen
 
 			mockHookFunctions.helpers.httpRequestWithAuthentication.call = jest
 				.fn()
@@ -221,8 +208,10 @@ describe('PageCrawlTrigger Webhook Methods', () => {
 
 			mockHookFunctions.getWorkflowStaticData.mockReturnValue(webhookData);
 			mockHookFunctions.getNodeParameter
+				.mockReturnValueOnce({ mode: 'list', value: '1' }) // workspace (resourceLocator)
 				.mockReturnValueOnce({ mode: 'slug', value: 'page-123' }) // page (resourceLocator)
-				.mockReturnValueOnce([]); // payloadFields
+				.mockReturnValueOnce(true) // simplifyOutput
+				.mockReturnValueOnce(false); // sendTestOnListen
 
 			mockHookFunctions.helpers.httpRequestWithAuthentication.call = jest
 				.fn()
@@ -293,7 +282,7 @@ describe('PageCrawlTrigger Webhook Handler', () => {
 		} as unknown as jest.Mocked<IWebhookFunctions>;
 	});
 
-	it('should process change event when subscribed', async () => {
+	it('should process change event', async () => {
 		mockWebhookFunctions.getRequestObject.mockReturnValue({
 			body: {
 				id: 1,
@@ -303,45 +292,7 @@ describe('PageCrawlTrigger Webhook Handler', () => {
 				difference: 10,
 			},
 		} as any);
-		mockWebhookFunctions.getNodeParameter
-			.mockReturnValueOnce(['change']) // events
-			.mockReturnValueOnce({ simplify: false }); // options
-
-		const boundWebhook = node.webhook.bind(mockWebhookFunctions);
-		const result = await boundWebhook();
-
-		expect(result.workflowData).toBeDefined();
-		expect(result.workflowData?.length).toBeGreaterThan(0);
-	});
-
-	it('should skip change event when not subscribed', async () => {
-		mockWebhookFunctions.getRequestObject.mockReturnValue({
-			body: {
-				id: 1,
-				status: 'changed',
-			},
-		} as any);
-		mockWebhookFunctions.getNodeParameter
-			.mockReturnValueOnce(['error']) // events - only subscribed to errors
-			.mockReturnValueOnce({}); // options
-
-		const boundWebhook = node.webhook.bind(mockWebhookFunctions);
-		const result = await boundWebhook();
-
-		expect(result.workflowData).toEqual([]);
-	});
-
-	it('should process error event when subscribed', async () => {
-		mockWebhookFunctions.getRequestObject.mockReturnValue({
-			body: {
-				id: 1,
-				status: 'error',
-				error_message: 'Page not found',
-			},
-		} as any);
-		mockWebhookFunctions.getNodeParameter
-			.mockReturnValueOnce(['error']) // events
-			.mockReturnValueOnce({ simplify: false }); // options
+		mockWebhookFunctions.getNodeParameter.mockReturnValueOnce(false); // simplifyOutput
 
 		const boundWebhook = node.webhook.bind(mockWebhookFunctions);
 		const result = await boundWebhook();
@@ -367,9 +318,7 @@ describe('PageCrawlTrigger Webhook Handler', () => {
 		};
 
 		mockWebhookFunctions.getRequestObject.mockReturnValue({ body: webhookBody } as any);
-		mockWebhookFunctions.getNodeParameter
-			.mockReturnValueOnce(['change']) // events
-			.mockReturnValueOnce({ simplify: true }); // options
+		mockWebhookFunctions.getNodeParameter.mockReturnValueOnce(true); // simplifyOutput
 
 		const boundWebhook = node.webhook.bind(mockWebhookFunctions);
 		await boundWebhook();

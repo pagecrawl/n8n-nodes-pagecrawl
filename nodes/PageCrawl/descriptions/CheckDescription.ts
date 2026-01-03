@@ -56,7 +56,7 @@ export const checkFields: INodeProperties[] = [
 			},
 		},
 		default: { mode: 'list', value: '' },
-		description: 'Select a page or enter slug/ID. <a href="https://pagecrawl.io/app/pages" target="_blank">View pages</a>.',
+		description: 'Select a page or enter slug/ID. Find the slug in your page URL (pagecrawl.io/app/pages/{slug}) or enable Debug mode in Settings to see page IDs.',
 		modes: [
 			{
 				displayName: 'From List',
@@ -113,17 +113,17 @@ export const checkFields: INodeProperties[] = [
 		},
 		options: [
 			{
-				displayName: 'Simple',
-				name: 'simple',
+				displayName: 'Advanced',
+				name: 'advanced',
 				type: 'boolean',
 				default: false,
-				description: 'Whether to return simplified response',
+				description: 'Whether to return full response with all fields',
 			},
 			{
 				displayName: 'Take',
 				name: 'take',
 				type: 'number',
-				default: 0,
+				default: 2,
 				description: 'Limit number of checks retrieved',
 				typeOptions: {
 					minValue: 0,
@@ -146,7 +146,7 @@ export const checkFields: INodeProperties[] = [
 				operation: ['getDiffHtml', 'getDiffImage', 'getDiffMarkdown'],
 			},
 		},
-		default: '',
-		description: 'The check ID (use "latest" for most recent)',
+		default: 'latest',
+		description: 'The check ID to get diff for (defaults to "latest" for most recent)',
 	},
 ];

@@ -13,31 +13,19 @@ export const screenshotOperations: INodeProperties[] = [
 		},
 		options: [
 			{
-				name: 'Get Check Screenshot',
-				value: 'getCheckScreenshot',
-				description: 'Get screenshot for a specific check',
-				action: 'Get check screenshot',
+				name: 'Get Screenshot',
+				value: 'getScreenshot',
+				description: 'Get full-page screenshot for a check',
+				action: 'Get screenshot',
 			},
 			{
-				name: 'Get Check Screenshot Diff',
-				value: 'getCheckDiff',
-				description: 'Get screenshot diff for a specific check',
-				action: 'Get check screenshot diff',
-			},
-			{
-				name: 'Get Latest Screenshot',
-				value: 'getLatest',
-				description: 'Get latest full-page screenshot',
-				action: 'Get latest screenshot',
-			},
-			{
-				name: 'Get Latest Screenshot Diff',
-				value: 'getLatestDiff',
-				description: 'Get latest screenshot diff',
-				action: 'Get latest screenshot diff',
+				name: 'Get Screenshot Diff',
+				value: 'getScreenshotDiff',
+				description: 'Get screenshot diff for a check',
+				action: 'Get screenshot diff',
 			},
 		],
-		default: 'getLatest',
+		default: 'getScreenshot',
 	},
 ];
 
@@ -56,7 +44,7 @@ export const screenshotFields: INodeProperties[] = [
 			},
 		},
 		default: { mode: 'list', value: '' },
-		description: 'Select a page or enter slug/ID. <a href="https://pagecrawl.io/app/pages" target="_blank">View pages</a>.',
+		description: 'Select a page or enter slug/ID. Find the slug in your page URL (pagecrawl.io/app/pages/{slug}). Enable Debug mode in Settings to see page IDs.',
 		modes: [
 			{
 				displayName: 'From List',
@@ -99,22 +87,29 @@ export const screenshotFields: INodeProperties[] = [
 			},
 		],
 	},
-
-	// ========================================
-	// screenshot:getCheckScreenshot, getCheckDiff
-	// ========================================
 	{
 		displayName: 'Check ID',
 		name: 'checkId',
 		type: 'string',
-		required: true,
 		displayOptions: {
 			show: {
 				resource: ['screenshot'],
-				operation: ['getCheckScreenshot', 'getCheckDiff'],
 			},
 		},
-		default: '',
-		description: 'The check ID (use "latest" for most recent)',
+		default: 'latest',
+		description: 'The check ID to get screenshot for (defaults to "latest" for most recent)',
+	},
+	{
+		displayName: 'Previous',
+		name: 'previous',
+		type: 'boolean',
+		displayOptions: {
+			show: {
+				resource: ['screenshot'],
+				operation: ['getScreenshot'],
+			},
+		},
+		default: false,
+		description: 'Whether to get the screenshot from the previous check (before the specified one)',
 	},
 ];

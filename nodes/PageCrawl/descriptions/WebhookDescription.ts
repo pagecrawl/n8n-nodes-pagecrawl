@@ -126,8 +126,9 @@ export const webhookFields: INodeProperties[] = [
 				name: 'payload_fields',
 				type: 'multiOptions',
 				options: WEBHOOK_PAYLOAD_FIELDS.map((field) => ({
-					name: field.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
-					value: field,
+					name: field.value.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
+					value: field.value,
+					description: field.description,
 				})),
 				default: [],
 				description: 'Fields to include in webhook payload (all if empty)',
@@ -188,8 +189,9 @@ export const webhookFields: INodeProperties[] = [
 				name: 'payload_fields',
 				type: 'multiOptions',
 				options: WEBHOOK_PAYLOAD_FIELDS.map((field) => ({
-					name: field.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
-					value: field,
+					name: field.value.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
+					value: field.value,
+					description: field.description,
 				})),
 				default: [],
 				description: 'Fields to include in webhook payload',

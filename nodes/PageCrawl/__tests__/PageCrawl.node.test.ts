@@ -43,7 +43,6 @@ describe('PageCrawl Node', () => {
 			expect(resourceValues).toContain('page');
 			expect(resourceValues).toContain('check');
 			expect(resourceValues).toContain('screenshot');
-			expect(resourceValues).toContain('webhook');
 		});
 
 		it('should have correct default resource', () => {
@@ -199,58 +198,8 @@ describe('PageCrawl Node Operations', () => {
 				mockExecuteFunctions,
 				'pageCrawlApi',
 				expect.objectContaining({
-					method: 'PUT',
-					url: 'https://pagecrawl.io/api/pages/123/check',
-				})
-			);
-		});
-	});
-
-	describe('Webhook Resource', () => {
-		it('should call correct endpoint for webhook getAll', async () => {
-			mockExecuteFunctions.getNodeParameter
-				.mockReturnValueOnce('webhook') // resource
-				.mockReturnValueOnce('getAll') // operation
-				.mockReturnValueOnce(true); // returnAll
-
-			mockExecuteFunctions.helpers.httpRequestWithAuthentication.call = jest
-				.fn()
-				.mockResolvedValue([]);
-
-			const boundExecute = node.execute.bind(mockExecuteFunctions);
-			await boundExecute();
-
-			expect(mockExecuteFunctions.helpers.httpRequestWithAuthentication.call).toHaveBeenCalledWith(
-				mockExecuteFunctions,
-				'pageCrawlApi',
-				expect.objectContaining({
-					method: 'GET',
-					url: 'https://pagecrawl.io/api/hooks',
-				})
-			);
-		});
-
-		it('should call correct endpoint for webhook create', async () => {
-			mockExecuteFunctions.getNodeParameter
-				.mockReturnValueOnce('webhook') // resource
-				.mockReturnValueOnce('create') // operation
-				.mockReturnValueOnce('https://example.com/webhook') // target_url
-				.mockReturnValueOnce({}); // additionalFields
-
-			mockExecuteFunctions.helpers.httpRequestWithAuthentication.call = jest
-				.fn()
-				.mockResolvedValue({ id: 1 });
-
-			const boundExecute = node.execute.bind(mockExecuteFunctions);
-			await boundExecute();
-
-			expect(mockExecuteFunctions.helpers.httpRequestWithAuthentication.call).toHaveBeenCalledWith(
-				mockExecuteFunctions,
-				'pageCrawlApi',
-				expect.objectContaining({
 					method: 'POST',
-					url: 'https://pagecrawl.io/api/hooks',
-					body: { target_url: 'https://example.com/webhook' },
+					url: 'https://pagecrawl.io/api/pages/123/check',
 				})
 			);
 		});
@@ -272,6 +221,188 @@ describe('PageCrawl Node Operations', () => {
 
 			expect(result).toBeDefined();
 			expect(result[0][0].json).toHaveProperty('error');
+		});
+	});
+});
+
+describe('PageCrawl Node Additional Fields', () => {
+	let node: PageCrawl;
+
+	beforeEach(() => {
+		node = new PageCrawl();
+	});
+
+	const getAdditionalFieldsOptions = () => {
+		const additionalFields = node.description.properties.find(
+			(p) => p.name === 'additionalFields' && p.displayOptions?.show?.operation?.includes('create')
+		);
+		return (additionalFields as any)?.options || [];
+	};
+
+	describe('Notification Options Fields', () => {
+		it('should have fail_silently field with correct options', () => {
+			const options = getAdditionalFieldsOptions();
+			const field = options.find((f: any) => f.name === 'fail_silently');
+
+			expect(field).toBeDefined();
+			expect(field.type).toBe('options');
+			expect(field.default).toBe(0);
+			expect(field.options).toHaveLength(2);
+			expect(field.options.map((o: any) => o.value)).toEqual([0, 1]);
+		});
+
+		it('should have notifications field for channel selection', () => {
+			const options = getAdditionalFieldsOptions();
+			const field = options.find((f: any) => f.name === 'notifications');
+
+			expect(field).toBeDefined();
+			expect(field.type).toBe('multiOptions');
+			expect(field.default).toEqual([]);
+		});
+
+		it('should have notification_emails field', () => {
+			const options = getAdditionalFieldsOptions();
+			const field = options.find((f: any) => f.name === 'notification_emails');
+
+			expect(field).toBeDefined();
+			expect(field.type).toBe('string');
+			expect(field.default).toBe('');
+		});
+	});
+
+	describe('Advanced Preferences Fields', () => {
+		it('should have check_always field', () => {
+			const options = getAdditionalFieldsOptions();
+			const field = options.find((f: any) => f.name === 'check_always');
+
+			expect(field).toBeDefined();
+			expect(field.type).toBe('boolean');
+			expect(field.default).toBe(false);
+		});
+
+		it('should have auth_username field', () => {
+			const options = getAdditionalFieldsOptions();
+			const field = options.find((f: any) => f.name === 'auth_username');
+
+			expect(field).toBeDefined();
+			expect(field.type).toBe('string');
+			expect(field.default).toBe('');
+		});
+
+		it('should have auth_password field with password type', () => {
+			const options = getAdditionalFieldsOptions();
+			const field = options.find((f: any) => f.name === 'auth_password');
+
+			expect(field).toBeDefined();
+			expect(field.type).toBe('string');
+			expect(field.typeOptions?.password).toBe(true);
+			expect(field.default).toBe('');
+		});
+
+		it('should have location field', () => {
+			const options = getAdditionalFieldsOptions();
+			const field = options.find((f: any) => f.name === 'location');
+
+			expect(field).toBeDefined();
+			expect(field.type).toBe('options');
+			expect(field.default).toBe('random1');
+		});
+
+		it('should have user_agent field', () => {
+			const options = getAdditionalFieldsOptions();
+			const field = options.find((f: any) => f.name === 'user_agent');
+
+			expect(field).toBeDefined();
+			expect(field.type).toBe('string');
+			expect(field.default).toBe('');
+		});
+	});
+
+	describe('Other Fields', () => {
+		it('should have skip_first_notification field', () => {
+			const options = getAdditionalFieldsOptions();
+			const field = options.find((f: any) => f.name === 'skip_first_notification');
+
+			expect(field).toBeDefined();
+			expect(field.type).toBe('boolean');
+			expect(field.default).toBe(false);
+		});
+
+		it('should have ignore_duplicates field', () => {
+			const options = getAdditionalFieldsOptions();
+			const field = options.find((f: any) => f.name === 'ignore_duplicates');
+
+			expect(field).toBeDefined();
+			expect(field.type).toBe('boolean');
+			expect(field.default).toBe(false);
+		});
+
+		it('should have rules field for notification rules', () => {
+			const options = getAdditionalFieldsOptions();
+			const field = options.find((f: any) => f.name === 'rules');
+
+			expect(field).toBeDefined();
+			expect(field.type).toBe('json');
+			expect(field.default).toBe('[]');
+		});
+
+		it('should have tags field', () => {
+			const options = getAdditionalFieldsOptions();
+			const field = options.find((f: any) => f.name === 'tags');
+
+			expect(field).toBeDefined();
+			expect(field.type).toBe('string');
+			expect(field.default).toBe('');
+		});
+	});
+
+	describe('Resource Locator Fields', () => {
+		it('should have workspace_id field as resourceLocator', () => {
+			const options = getAdditionalFieldsOptions();
+			const field = options.find((f: any) => f.name === 'workspace_id');
+
+			expect(field).toBeDefined();
+			expect(field.type).toBe('resourceLocator');
+		});
+
+		it('should have folder_id field as resourceLocator', () => {
+			const options = getAdditionalFieldsOptions();
+			const field = options.find((f: any) => f.name === 'folder_id');
+
+			expect(field).toBeDefined();
+			expect(field.type).toBe('resourceLocator');
+		});
+
+		it('should have template_id field as resourceLocator', () => {
+			const options = getAdditionalFieldsOptions();
+			const field = options.find((f: any) => f.name === 'template_id');
+
+			expect(field).toBeDefined();
+			expect(field.type).toBe('resourceLocator');
+		});
+
+		it('should have auth_id field as resourceLocator', () => {
+			const options = getAdditionalFieldsOptions();
+			const field = options.find((f: any) => f.name === 'auth_id');
+
+			expect(field).toBeDefined();
+			expect(field.type).toBe('resourceLocator');
+		});
+	});
+
+	describe('Field Availability', () => {
+		it('should have additionalFields available for create operation', () => {
+			const additionalFields = node.description.properties.find(
+				(p) => p.name === 'additionalFields' && p.displayOptions?.show?.operation?.includes('create')
+			);
+			expect(additionalFields).toBeDefined();
+		});
+
+		it('should have additionalFields available for update operation', () => {
+			const additionalFields = node.description.properties.find(
+				(p) => p.name === 'additionalFields' && p.displayOptions?.show?.operation?.includes('update')
+			);
+			expect(additionalFields).toBeDefined();
 		});
 	});
 });

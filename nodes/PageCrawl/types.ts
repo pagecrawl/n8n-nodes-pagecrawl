@@ -7,7 +7,7 @@ export interface IPageElement {
 export interface INotificationRule {
 	type: 'text_difference' | 'added' | 'removed' | 'contains' | 'ncontains' |
 		'eq' | 'neq' | 'increased' | 'decreased' | 'is' |
-		'gt' | 'lt' | 'gte' | 'lte';
+		'gt' | 'lt' | 'gte' | 'lte' | 'ignore_text';
 	value: string | number;
 	element?: number;
 }
@@ -125,25 +125,25 @@ export const NOTIFICATION_CHANNELS = [
 	{ value: 'telegram', label: 'Telegram' },
 ];
 
-export const WEBHOOK_PAYLOAD_FIELDS = [
-	'id',
-	'title',
-	'status',
-	'content_type',
-	'visual_diff',
-	'changed_at',
-	'contents',
-	'difference',
-	'human_difference',
-	'page_screenshot_image',
-	'text_difference_image',
-	'html_difference',
-	'markdown_difference',
-	'page',
-	'page_elements',
-	'json',
-	'json_patch',
-	'previous_check',
-	'ai_summary',
-	'ai_priority_score',
+export const WEBHOOK_PAYLOAD_FIELDS: { value: string; description: string }[] = [
+	{ value: 'id', description: 'Unique identifier of this check' },
+	{ value: 'title', description: 'The page title extracted from the monitored page' },
+	{ value: 'status', description: 'Check status (e.g., changed, unchanged, failed)' },
+	{ value: 'content_type', description: 'Document content type (e.g., text/html, text/css, application/json)' },
+	{ value: 'visual_diff', description: 'Visual difference percentage between current and previous screenshots (0-100)' },
+	{ value: 'changed_at', description: 'ISO 8601 timestamp when the change was detected' },
+	{ value: 'contents', description: 'Current content of tracked elements or full page text' },
+	{ value: 'difference', description: 'Numerical difference value (e.g., price change percentage, text difference)' },
+	{ value: 'human_difference', description: 'Human-readable description of the change (e.g., "+5.2% increased")' },
+	{ value: 'page_screenshot_image', description: 'URL to the screenshot image of the current page state' },
+	{ value: 'text_difference_image', description: 'URL to the image highlighting text differences' },
+	{ value: 'html_difference', description: 'HTML diff markup showing added/removed content with highlighting' },
+	{ value: 'markdown_difference', description: 'Markdown-formatted diff showing changes in text format' },
+	{ value: 'page', description: 'Page object with metadata (URL, name, frequency, settings, etc.)' },
+	{ value: 'page_elements', description: 'Array of tracked elements with their current values and change status' },
+	{ value: 'json', description: 'Parsed JSON data if the page returns JSON content' },
+	{ value: 'json_patch', description: 'RFC 6902 JSON Patch operations describing exact changes to JSON data' },
+	{ value: 'previous_check', description: 'Data from the previous check for comparison' },
+	{ value: 'ai_summary', description: 'AI-generated natural language summary of what changed and why it matters' },
+	{ value: 'ai_priority_score', description: 'AI-generated priority score (1-100) indicating importance of the change' },
 ];
