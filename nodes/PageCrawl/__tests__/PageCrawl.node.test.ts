@@ -109,30 +109,6 @@ describe('PageCrawl Node Operations', () => {
 	});
 
 	describe('Page Resource', () => {
-		it('should call correct endpoint for getAll operation', async () => {
-			mockExecuteFunctions.getNodeParameter
-				.mockReturnValueOnce('page') // resource
-				.mockReturnValueOnce('getAll') // operation
-				.mockReturnValueOnce(true) // returnAll
-				.mockReturnValueOnce({}); // options
-
-			mockExecuteFunctions.helpers.httpRequestWithAuthentication.call = jest
-				.fn()
-				.mockResolvedValue([{ id: 1, name: 'Test Page' }]);
-
-			const boundExecute = node.execute.bind(mockExecuteFunctions);
-			await boundExecute();
-
-			expect(mockExecuteFunctions.helpers.httpRequestWithAuthentication.call).toHaveBeenCalledWith(
-				mockExecuteFunctions,
-				'pageCrawlApi',
-				expect.objectContaining({
-					method: 'GET',
-					url: 'https://pagecrawl.io/api/pages',
-				})
-			);
-		});
-
 		it('should call correct endpoint for get operation', async () => {
 			mockExecuteFunctions.getNodeParameter
 				.mockReturnValueOnce('page') // resource
@@ -209,7 +185,9 @@ describe('PageCrawl Node Operations', () => {
 		it('should continue on fail when configured', async () => {
 			mockExecuteFunctions.getNodeParameter
 				.mockReturnValueOnce('page') // resource
-				.mockReturnValueOnce('getAll'); // operation
+				.mockReturnValueOnce('get') // operation
+				.mockReturnValueOnce({ mode: 'slug', value: '123' }) // pageId
+				.mockReturnValueOnce({}); // options
 
 			mockExecuteFunctions.continueOnFail.mockReturnValue(true);
 			mockExecuteFunctions.helpers.httpRequestWithAuthentication.call = jest
@@ -240,17 +218,6 @@ describe('PageCrawl Node Additional Fields', () => {
 	};
 
 	describe('Notification Options Fields', () => {
-		it('should have fail_silently field with correct options', () => {
-			const options = getAdditionalFieldsOptions();
-			const field = options.find((f: any) => f.name === 'fail_silently');
-
-			expect(field).toBeDefined();
-			expect(field.type).toBe('options');
-			expect(field.default).toBe(0);
-			expect(field.options).toHaveLength(2);
-			expect(field.options.map((o: any) => o.value)).toEqual([0, 1]);
-		});
-
 		it('should have notifications field for channel selection', () => {
 			const options = getAdditionalFieldsOptions();
 			const field = options.find((f: any) => f.name === 'notifications');
@@ -335,15 +302,6 @@ describe('PageCrawl Node Additional Fields', () => {
 			expect(field).toBeDefined();
 			expect(field.type).toBe('boolean');
 			expect(field.default).toBe(false);
-		});
-
-		it('should have rules field for notification rules', () => {
-			const options = getAdditionalFieldsOptions();
-			const field = options.find((f: any) => f.name === 'rules');
-
-			expect(field).toBeDefined();
-			expect(field.type).toBe('json');
-			expect(field.default).toBe('[]');
 		});
 
 		it('should have tags field', () => {

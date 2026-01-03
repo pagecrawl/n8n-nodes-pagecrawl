@@ -1,4 +1,6 @@
 import { INodeProperties } from 'n8n-workflow';
+import { LANGUAGES } from '../data/languages';
+import { TIMEZONES } from '../data/timezones';
 
 export const pageOperations: INodeProperties[] = [
 	{
@@ -37,12 +39,6 @@ export const pageOperations: INodeProperties[] = [
 				action: 'Get a page',
 			},
 			{
-				name: 'Get Many',
-				value: 'getAll',
-				description: 'Get all tracked pages',
-				action: 'Get many pages',
-			},
-			{
 				name: 'Run Check Now',
 				value: 'runCheckNow',
 				description: 'Trigger an immediate check for a page',
@@ -55,81 +51,11 @@ export const pageOperations: INodeProperties[] = [
 				action: 'Update a page',
 			},
 		],
-		default: 'getAll',
+		default: 'get',
 	},
 ];
 
 export const pageFields: INodeProperties[] = [
-	// ========================================
-	// page:getAll
-	// ========================================
-	{
-		displayName: 'Return All',
-		name: 'returnAll',
-		type: 'boolean',
-		displayOptions: {
-			show: {
-				resource: ['page'],
-				operation: ['getAll'],
-			},
-		},
-		default: true,
-		description: 'Whether to return all results or only up to a given limit',
-	},
-	{
-		displayName: 'Limit',
-		name: 'limit',
-		type: 'number',
-		displayOptions: {
-			show: {
-				resource: ['page'],
-				operation: ['getAll'],
-				returnAll: [false],
-			},
-		},
-		typeOptions: {
-			minValue: 1,
-		},
-		default: 50,
-		description: 'Max number of results to return',
-	},
-	{
-		displayName: 'Options',
-		name: 'options',
-		type: 'collection',
-		placeholder: 'Add Option',
-		default: {},
-		displayOptions: {
-			show: {
-				resource: ['page'],
-				operation: ['getAll'],
-			},
-		},
-		options: [
-			{
-				displayName: 'Folder',
-				name: 'folder',
-				type: 'string',
-				default: '',
-				description: 'Filter by folder. Use "*" for all folders, or specify folder path.',
-			},
-			{
-				displayName: 'Simple',
-				name: 'simple',
-				type: 'boolean',
-				default: false,
-				description: 'Whether to return simplified response without configuration options',
-			},
-			{
-				displayName: 'Take',
-				name: 'take',
-				type: 'number',
-				default: 0,
-				description: 'Limit number of checks retrieved per page',
-			},
-		],
-	},
-
 	// ========================================
 	// page:get
 	// ========================================
@@ -308,7 +234,7 @@ export const pageFields: INodeProperties[] = [
 		options: [
 			{
 				name: 'Everything On Page',
-				value: 'everything',
+				value: '*',
 				description: 'Track all visible content on the page',
 			},
 			{
@@ -318,11 +244,11 @@ export const pageFields: INodeProperties[] = [
 			},
 			{
 				name: 'Reader Mode',
-				value: 'reader',
+				value: 'article',
 				description: 'Extract and track article content only',
 			},
 		],
-		default: 'everything',
+		default: '*',
 		description: 'How to extract page content',
 	},
 	{
@@ -355,21 +281,59 @@ export const pageFields: INodeProperties[] = [
 		},
 		options: [
 			{
-				displayName: 'Frequency',
-				name: 'frequency',
-				type: 'options',
-				typeOptions: {
-					loadOptionsMethod: 'getFrequencies',
-				},
-				default: 1440,
-				description: 'How often to check for changes',
-			},
-			{
 				displayName: 'Ignore Duplicates',
 				name: 'ignore_duplicates',
 				type: 'boolean',
 				default: false,
 				description: 'Whether to prevent duplicate page additions',
+			},
+			{
+				displayName: 'Folder',
+				name: 'folder_id',
+				type: 'resourceLocator',
+				default: { mode: 'list', value: '' },
+				description: 'Save page in a specific folder',
+				modes: [
+					{
+						displayName: 'From List',
+						name: 'list',
+						type: 'list',
+						typeOptions: {
+							searchListMethod: 'folderSearch',
+							searchable: true,
+						},
+					},
+					{
+						displayName: 'By ID',
+						name: 'id',
+						type: 'string',
+						placeholder: 'e.g. 123',
+					},
+				],
+			},
+			{
+				displayName: 'Template',
+				name: 'template_id',
+				type: 'resourceLocator',
+				default: { mode: 'list', value: '' },
+				description: 'Use a template to pre-fill page settings',
+				modes: [
+					{
+						displayName: 'From List',
+						name: 'list',
+						type: 'list',
+						typeOptions: {
+							searchListMethod: 'templateSearch',
+							searchable: true,
+						},
+					},
+					{
+						displayName: 'By ID',
+						name: 'id',
+						type: 'string',
+						placeholder: 'e.g. 123',
+					},
+				],
 			},
 		],
 	},
@@ -407,7 +371,7 @@ export const pageFields: INodeProperties[] = [
 		description: 'Label for the page',
 	},
 	{
-		displayName: 'Elements',
+		displayName: 'Tracked Elements',
 		name: 'elements',
 		type: 'fixedCollection',
 		typeOptions: {
@@ -430,20 +394,134 @@ export const pageFields: INodeProperties[] = [
 						displayName: 'Type',
 						name: 'type',
 						type: 'options',
+						required: true,
 						options: [
+							// Commonly used
+							{ name: 'Full Page Text', value: 'fullpage' },
 							{ name: 'Text', value: 'text' },
 							{ name: 'Number', value: 'number' },
-							{ name: 'Full Page', value: 'fullpage' },
+							{ name: 'Visual', value: 'visual' },
+							// Page Areas
+							{ name: 'Price', value: 'price' },
+							{ name: 'Links', value: 'links' },
+							{ name: 'Iframes', value: 'fullpage_iframe' },
+							// Files
+							{ name: 'PDF File', value: 'pdf' },
+							{ name: 'Word File', value: 'docx' },
+							{ name: 'Excel File', value: 'xlsx' },
+							{ name: 'CSV File', value: 'csv' },
+							{ name: 'File Checksum', value: 'file_hash' },
+							// Multiple matching elements
+							{ name: 'Text (All Matches)', value: 'text_multiple' },
+							{ name: 'Text (All Matches, Sorted)', value: 'text_multiple_sorted' },
+							{ name: 'HTML (All Matches)', value: 'html_multiple' },
+							// Advanced
+							{ name: 'Text Presence', value: 'boolean' },
+							{ name: 'HTML', value: 'html' },
+							{ name: 'JavaScript', value: 'javascript' },
 						],
 						default: 'text',
 						description: 'Type of element to track',
 					},
+					// Full Page mode dropdown
 					{
-						displayName: 'Selector',
+						displayName: 'Page Mode',
+						name: 'selector',
+						type: 'options',
+						required: true,
+						displayOptions: {
+							show: {
+								type: ['fullpage'],
+							},
+						},
+						options: [
+							{ name: 'Everything On Page', value: '*' },
+							{ name: 'Content Only', value: 'content' },
+							{ name: 'Reader Mode', value: 'article' },
+						],
+						default: '*',
+						description: 'How to extract page content',
+					},
+					// Links mode dropdown
+					{
+						displayName: 'Link Type',
+						name: 'selector',
+						type: 'options',
+						required: true,
+						displayOptions: {
+							show: {
+								type: ['links'],
+							},
+						},
+						options: [
+							{ name: 'Internal Links', value: 'internal' },
+							{ name: 'External Links', value: '*' },
+							{ name: 'All Links', value: 'both' },
+						],
+						default: '*',
+						description: 'Which links to monitor',
+					},
+					// CSS/XPath selector for text-based types
+					{
+						displayName: 'CSS/XPath Selector',
 						name: 'selector',
 						type: 'string',
+						required: true,
+						displayOptions: {
+							show: {
+								type: ['text', 'number', 'visual', 'html', 'text_multiple', 'text_multiple_sorted', 'html_multiple'],
+							},
+						},
 						default: '',
-						description: 'CSS or XPath selector',
+						placeholder: 'e.g. .price, #stock, //div[@class="value"]',
+						description: 'CSS selector or XPath expression. For visual type, use coordinates format: x,y,width,height',
+					},
+					// Price min value
+					{
+						displayName: 'Min Price',
+						name: 'selector',
+						type: 'string',
+						displayOptions: {
+							show: {
+								type: ['price'],
+							},
+						},
+						default: '',
+						placeholder: 'e.g. 50',
+						description: 'Minimum price to track (leave empty for any price)',
+					},
+					// JavaScript code
+					{
+						displayName: 'JavaScript Code',
+						name: 'selector',
+						type: 'string',
+						required: true,
+						typeOptions: {
+							rows: 4,
+						},
+						displayOptions: {
+							show: {
+								type: ['javascript'],
+							},
+						},
+						default: '',
+						placeholder: '(() => {\n  const el = document.querySelector(".price");\n  return el ? el.innerText : "Not found";\n})()',
+						description: 'JavaScript code to execute and return a value',
+					},
+					// Boolean keywords
+					{
+						displayName: 'Keywords',
+						name: 'selector',
+						type: 'string',
+						required: true,
+						displayOptions: {
+							show: {
+								type: ['boolean'],
+							},
+						},
+						default: '',
+						placeholder: 'e.g. sold out, out of stock',
+						description: 'Comma-separated keywords to search for. Prefix with NOT: to invert (e.g. NOT:in stock)',
 					},
 					{
 						displayName: 'Label',
@@ -451,6 +529,271 @@ export const pageFields: INodeProperties[] = [
 						type: 'string',
 						default: '',
 						description: 'Short label for the element',
+					},
+					{
+						displayName: 'Threshold',
+						name: 'threshold',
+						type: 'options',
+						options: [
+
+							{ name: 'Any Change', value: null as unknown as number },
+							{ name: 'Do Not Trigger', value: -1 },
+							{ name: 'Tiny (1%)', value: 1 },
+							{ name: 'Very Minor (3%)', value: 3 },
+							{ name: 'Minor (5%)', value: 5 },
+							{ name: 'Moderate (10%)', value: 10 },
+							{ name: 'Significant (30%)', value: 30 },
+							{ name: 'Very High (50%)', value: 50 },
+							{ name: 'Extremely High (80%)', value: 80 },
+						],
+						default: 0,
+						description: 'Minimum change percentage to trigger notification',
+					},
+				],
+			},
+		],
+	},
+	{
+		displayName: 'Actions',
+		name: 'actions',
+		type: 'fixedCollection',
+		typeOptions: {
+			multipleValues: true,
+		},
+		displayOptions: {
+			show: {
+				resource: ['page'],
+				operation: ['create'],
+			},
+		},
+		default: {},
+		description: 'Actions to perform before tracking the page',
+		options: [
+			{
+				name: 'action',
+				displayName: 'Action',
+				values: [
+					{
+						displayName: 'Action Type',
+						name: 'type',
+						type: 'options',
+						options: [
+							{ name: 'Click Element', value: 'click' },
+							{ name: 'Type Text', value: 'type' },
+							{ name: 'Wait (Seconds)', value: 'wait' },
+							{ name: 'Wait for Element', value: 'wait_element' },
+							{ name: 'Scroll to Bottom', value: 'scroll_to_bottom' },
+							{ name: 'Remove Element', value: 'remove_element' },
+							{ name: 'Hide Cookie Banners', value: 'remove_cookies_v2' },
+							{ name: 'Hover Element', value: 'hover' },
+							{ name: 'Run JavaScript', value: 'javascript' },
+							{ name: 'Go Back', value: 'back' },
+						],
+						default: 'click',
+						description: 'Type of action to perform',
+					},
+					{
+						displayName: 'CSS/XPath Selector',
+						name: 'selector',
+						type: 'string',
+						default: '',
+						placeholder: 'e.g. .button, #submit, //button[@type="submit"]',
+						description: 'CSS selector or XPath to target element',
+						displayOptions: {
+							show: {
+								type: ['click', 'hover', 'type', 'remove_element', 'wait_element'],
+							},
+						},
+					},
+					{
+						displayName: 'Text to Type',
+						name: 'value',
+						type: 'string',
+						default: '',
+						description: 'Text to type into the element',
+						displayOptions: {
+							show: {
+								type: ['type'],
+							},
+						},
+					},
+					{
+						displayName: 'Seconds',
+						name: 'value',
+						type: 'number',
+						default: 3,
+						typeOptions: {
+							minValue: 1,
+							maxValue: 30,
+						},
+						description: 'Number of seconds to wait',
+						displayOptions: {
+							show: {
+								type: ['wait'],
+							},
+						},
+					},
+					{
+						displayName: 'JavaScript Code',
+						name: 'value',
+						type: 'string',
+						typeOptions: {
+							rows: 4,
+						},
+						default: '',
+						placeholder: "document.querySelector('.popup').remove()",
+						description: 'JavaScript code to execute on the page',
+						displayOptions: {
+							show: {
+								type: ['javascript'],
+							},
+						},
+					},
+				],
+			},
+		],
+	},
+	{
+		displayName: 'Enable Conditions & Filters',
+		name: 'rules_enabled',
+		type: 'boolean',
+		default: false,
+		displayOptions: {
+			show: {
+				resource: ['page'],
+				operation: ['create'],
+			},
+		},
+		description: 'Whether to enable conditional notification rules',
+	},
+	{
+		displayName: 'Match All Conditions',
+		name: 'rules_and',
+		type: 'boolean',
+		default: false,
+		displayOptions: {
+			show: {
+				resource: ['page'],
+				operation: ['create'],
+				rules_enabled: [true],
+			},
+		},
+		description: 'Whether all conditions must match (AND) or any condition (OR)',
+	},
+	{
+		displayName: 'Always Record Changes',
+		name: 'record_always',
+		type: 'boolean',
+		default: false,
+		displayOptions: {
+			show: {
+				resource: ['page'],
+				operation: ['create'],
+				rules_enabled: [true],
+			},
+		},
+		description: 'Whether to record all change detections even when conditions are not met. Notifications are only sent when conditions match.',
+	},
+	{
+		displayName: 'Conditions & Filters',
+		name: 'rules',
+		type: 'fixedCollection',
+		typeOptions: {
+			multipleValues: true,
+		},
+		default: {},
+		displayOptions: {
+			show: {
+				resource: ['page'],
+				operation: ['create'],
+				rules_enabled: [true],
+			},
+		},
+		description: 'Only notify when these conditions are met',
+		options: [
+			{
+				name: 'rule',
+				displayName: 'Condition',
+				values: [
+					{
+						displayName: 'Element Index',
+						name: 'element',
+						type: 'number',
+						default: 0,
+						description: 'Which tracked element to check (0 = first, 1 = second, etc.)',
+					},
+					{
+						displayName: 'Condition',
+						name: 'type',
+						type: 'options',
+						options: [
+							{ name: 'Keyword Appeared', value: 'added', description: 'Notify when keyword appears' },
+							{ name: 'Keyword Disappeared', value: 'removed', description: 'Notify when keyword disappears' },
+							{ name: 'Text Contains', value: 'contains', description: 'Notify when text contains value' },
+							{ name: 'Text Does Not Contain', value: 'ncontains', description: 'Notify when text does not contain value' },
+							{ name: 'Text Equals', value: 'eq', description: 'Notify when text exactly matches value' },
+							{ name: 'Text Does Not Equal', value: 'neq', description: 'Notify when text does not match value' },
+							{ name: 'Greater Than', value: 'gt', description: 'Value is greater than threshold' },
+							{ name: 'Less Than', value: 'lt', description: 'Value is less than threshold' },
+							{ name: 'Increased By %', value: 'increased', description: 'Value increased by percentage' },
+							{ name: 'Decreased By %', value: 'decreased', description: 'Value decreased by percentage' },
+							{ name: 'Ignore Text', value: 'ignore_text', description: 'Ignore specific text patterns' },
+						],
+						default: 'contains',
+						description: 'Type of condition to apply',
+					},
+					{
+						displayName: 'Keywords',
+						name: 'value',
+						type: 'string',
+						default: '',
+						placeholder: 'sold out, unavailable',
+						description: 'Comma-separated keywords to watch for',
+						displayOptions: {
+							show: {
+								type: ['added', 'removed', 'contains', 'ncontains'],
+							},
+						},
+					},
+					{
+						displayName: 'Text Value',
+						name: 'value',
+						type: 'string',
+						default: '',
+						description: 'Exact text value to match',
+						displayOptions: {
+							show: {
+								type: ['eq', 'neq'],
+							},
+						},
+					},
+					{
+						displayName: 'Threshold',
+						name: 'value',
+						type: 'number',
+						default: 0,
+						description: 'Numeric threshold value',
+						displayOptions: {
+							show: {
+								type: ['gt', 'lt', 'increased', 'decreased'],
+							},
+						},
+					},
+					{
+						displayName: 'Text to Ignore',
+						name: 'value',
+						type: 'string',
+						typeOptions: {
+							rows: 3,
+						},
+						default: '',
+						placeholder: 'One pattern per line',
+						description: 'Text patterns to ignore when detecting changes',
+						displayOptions: {
+							show: {
+								type: ['ignore_text'],
+							},
+						},
 					},
 				],
 			},
@@ -464,7 +807,7 @@ export const pageFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				resource: ['page'],
-				operation: ['create'],
+				operation: ['create', 'createSimple'],
 			},
 		},
 		typeOptions: {
@@ -486,20 +829,6 @@ export const pageFields: INodeProperties[] = [
 			},
 		},
 		options: [
-			{
-				displayName: 'Actions',
-				name: 'actions',
-				type: 'json',
-				default: '[]',
-				description: 'Actions to perform before tracking (JSON array)',
-			},
-			{
-				displayName: 'Advanced',
-				name: 'advanced',
-				type: 'boolean',
-				default: false,
-				description: 'Whether to use advanced settings',
-			},
 			{
 				displayName: 'Auth Password',
 				name: 'auth_password',
@@ -532,17 +861,6 @@ export const pageFields: INodeProperties[] = [
 				description: 'Whether to disable page monitoring',
 			},
 			{
-				displayName: 'Fail Silently',
-				name: 'fail_silently',
-				type: 'options',
-				options: [
-					{ name: 'Send Error Notifications', value: 0 },
-					{ name: 'Never Send Error Notifications', value: 1 },
-				],
-				default: 0,
-				description: 'Error notification behavior',
-			},
-			{
 				displayName: 'Headers',
 				name: 'headers',
 				type: 'json',
@@ -560,13 +878,9 @@ export const pageFields: INodeProperties[] = [
 				displayName: 'Location',
 				name: 'location',
 				type: 'options',
-				options: [
-					{ name: 'Random Proxy', value: 'random1' },
-					{ name: 'London, UK', value: 'lon1' },
-					{ name: 'Toronto, CA', value: 'tor1' },
-					{ name: 'New York, US', value: 'ny1' },
-					{ name: 'Frankfurt, DE', value: 'fra1' },
-				],
+				typeOptions: {
+					loadOptionsMethod: 'getLocations',
+				},
 				default: 'random1',
 				description: 'Server location to make requests from',
 			},
@@ -599,28 +913,7 @@ export const pageFields: INodeProperties[] = [
 					rows: 4,
 				},
 				default: '',
-				description: 'List of proxies (one per line)',
-			},
-			{
-				displayName: 'Rules',
-				name: 'rules',
-				type: 'json',
-				default: '[]',
-				description: 'Notification rules (JSON array)',
-			},
-			{
-				displayName: 'Rules AND Logic',
-				name: 'rules_and',
-				type: 'boolean',
-				default: false,
-				description: 'Whether all rules must match for notification',
-			},
-			{
-				displayName: 'Rules Enabled',
-				name: 'rules_enabled',
-				type: 'boolean',
-				default: false,
-				description: 'Whether to enable notification rules',
+				description: 'List of proxies (one per line, user:password@hostname:port format)',
 			},
 			{
 				displayName: 'Skip First Notification',
@@ -628,32 +921,6 @@ export const pageFields: INodeProperties[] = [
 				type: 'boolean',
 				default: false,
 				description: 'Whether to skip the first notification after creating/updating',
-			},
-			{
-				displayName: 'Track Type',
-				name: 'track_type',
-				type: 'options',
-				options: [
-					{ name: 'Single URL', value: 'one' },
-					{ name: 'Multiple URLs', value: 'multiple' },
-				],
-				default: 'one',
-				description: 'Track single or multiple URLs',
-			},
-			{
-				displayName: 'URLs',
-				name: 'urls',
-				type: 'string',
-				typeOptions: {
-					rows: 4,
-				},
-				default: '',
-				description: 'URLs to track (one per line, use || for custom titles)',
-				displayOptions: {
-					show: {
-						track_type: ['multiple'],
-					},
-				},
 			},
 			{
 				displayName: 'User Agent',
@@ -674,7 +941,7 @@ export const pageFields: INodeProperties[] = [
 				name: 'folder_id',
 				type: 'resourceLocator',
 				default: { mode: 'list', value: '' },
-				description: 'Save page in a specific folder (Parent → Child → Folder)',
+				description: 'Save page in a specific folder',
 				modes: [
 					{
 						displayName: 'From List',
@@ -741,6 +1008,66 @@ export const pageFields: INodeProperties[] = [
 					},
 				],
 			},
+			{
+				displayName: 'Device',
+				name: 'device',
+				type: 'options',
+				typeOptions: {
+					loadOptionsMethod: 'getDevices',
+				},
+				default: '',
+				description: 'Device viewport simulation',
+			},
+			{
+				displayName: 'Language',
+				name: 'language',
+				type: 'options',
+				options: LANGUAGES,
+				default: '',
+				description: 'Browser language setting',
+			},
+			{
+				displayName: 'Timezone',
+				name: 'timezone',
+				type: 'options',
+				options: TIMEZONES,
+				default: '',
+				description: 'Browser timezone setting',
+			},
+			{
+				displayName: 'Screenshots',
+				name: 'screenshots',
+				type: 'boolean',
+				default: true,
+				description: 'Whether to capture screenshots',
+			},
+			{
+				displayName: 'AI Summaries Enabled',
+				name: 'ai_summaries_enabled',
+				type: 'boolean',
+				default: true,
+				description: 'Whether to enable AI-generated summaries',
+			},
+			{
+				displayName: 'AI Context',
+				name: 'ai_page_focus',
+				type: 'string',
+				typeOptions: {
+					rows: 3,
+				},
+				default: '',
+				description: 'Context to help AI generate more relevant summaries',
+			},
+			{
+				displayName: 'AI Model',
+				name: 'ai_model',
+				type: 'options',
+				typeOptions: {
+					loadOptionsMethod: 'getAIModels',
+				},
+				default: '',
+				description: 'Override AI model (leave empty for workspace default)',
+			},
 		],
 	},
 
@@ -760,13 +1087,6 @@ export const pageFields: INodeProperties[] = [
 			},
 		},
 		options: [
-			{
-				displayName: 'Elements',
-				name: 'elements',
-				type: 'json',
-				default: '[]',
-				description: 'Elements to track (JSON array)',
-			},
 			{
 				displayName: 'Frequency',
 				name: 'frequency',

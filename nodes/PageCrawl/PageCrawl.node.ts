@@ -101,6 +101,48 @@ export class PageCrawl implements INodeType {
 
 	methods = {
 		loadOptions: {
+			async getLocations(this: ILoadOptionsFunctions) {
+				const baseUrl = 'https://pagecrawl.io';
+
+				try {
+					const response = await this.helpers.httpRequestWithAuthentication.call(
+						this,
+						'pageCrawlApi',
+						{
+							method: 'GET',
+							url: `${baseUrl}/api/user`,
+							json: true,
+						},
+					);
+
+					// Get available locations from user account
+					const locations = response.locations || [];
+					if (Array.isArray(locations) && locations.length > 0) {
+						return locations.map((loc: any) => ({
+							name: loc.name || loc.value,
+							value: loc.value,
+						}));
+					}
+
+					// Fallback to default locations
+					return [
+						{ name: 'Random Proxy', value: 'random1' },
+						{ name: 'London, UK', value: 'lon1' },
+						{ name: 'Toronto, CA', value: 'tor1' },
+						{ name: 'New York, US', value: 'ny1' },
+						{ name: 'Frankfurt, DE', value: 'fra1' },
+					];
+				} catch (error) {
+					// Return default locations if API call fails
+					return [
+						{ name: 'Random Proxy', value: 'random1' },
+						{ name: 'London, UK', value: 'lon1' },
+						{ name: 'Toronto, CA', value: 'tor1' },
+						{ name: 'New York, US', value: 'ny1' },
+						{ name: 'Frankfurt, DE', value: 'fra1' },
+					];
+				}
+			},
 			async getFrequencies(this: ILoadOptionsFunctions) {
 				const baseUrl = 'https://pagecrawl.io';
 
@@ -148,6 +190,86 @@ export class PageCrawl implements INodeType {
 				} catch (error) {
 					// Return all frequencies if API call fails
 					return allFrequencies;
+				}
+			},
+			async getDevices(this: ILoadOptionsFunctions) {
+				const baseUrl = 'https://pagecrawl.io';
+
+				try {
+					const response = await this.helpers.httpRequestWithAuthentication.call(
+						this,
+						'pageCrawlApi',
+						{
+							method: 'GET',
+							url: `${baseUrl}/api/user`,
+							json: true,
+						},
+					);
+
+					// Get available devices from user account
+					const devices = response.devices || {};
+					if (typeof devices === 'object' && Object.keys(devices).length > 0) {
+						return Object.entries(devices).map(([key, label]) => ({
+							name: label as string,
+							value: key,
+						}));
+					}
+
+					// Fallback to default devices
+					return [
+						{ name: 'Desktop (1920x1080)', value: 'desktop' },
+						{ name: 'Mobile (375x667)', value: 'mobile' },
+						{ name: 'Tablet (768x1024)', value: 'tablet' },
+					];
+				} catch (error) {
+					// Return default devices if API call fails
+					return [
+						{ name: 'Desktop (1920x1080)', value: 'desktop' },
+						{ name: 'Mobile (375x667)', value: 'mobile' },
+						{ name: 'Tablet (768x1024)', value: 'tablet' },
+					];
+				}
+			},
+			async getAIModels(this: ILoadOptionsFunctions) {
+				const baseUrl = 'https://pagecrawl.io';
+
+				try {
+					// Get workspace ID from node parameter
+					const workspaceLocator = this.getNodeParameter('workspace', 0) as IDataObject;
+					const workspaceId = (workspaceLocator?.value as string) || '';
+
+					if (!workspaceId) {
+						return [{ name: 'Use Workspace Default', value: '' }];
+					}
+
+					const response = await this.helpers.httpRequestWithAuthentication.call(
+						this,
+						'pageCrawlApi',
+						{
+							method: 'GET',
+							url: `${baseUrl}/api/workspaces/${workspaceId}/ai/available-models`,
+							json: true,
+						},
+					);
+
+					// Get available AI models
+					const models = response.models || [];
+					const currentModel = response.current || '';
+
+					const options = [
+						{ name: currentModel ? `Use Workspace Default (${currentModel})` : 'Use Workspace Default', value: '' },
+					];
+
+					if (Array.isArray(models) && models.length > 0) {
+						models.forEach((model: string) => {
+							options.push({ name: model, value: model });
+						});
+					}
+
+					return options;
+				} catch (error) {
+					// Return default option if API call fails
+					return [{ name: 'Use Workspace Default', value: '' }];
 				}
 			},
 		},
@@ -400,40 +522,7 @@ export class PageCrawl implements INodeType {
 
 				// Handle different resources and operations
 				if (resource === 'page') {
-					if (operation === 'getAll') {
-						const returnAll = this.getNodeParameter('returnAll', i) as boolean;
-						const options = this.getNodeParameter('options', i) as any;
-						const endpoint = '/pages';
-						const qs: any = {};
-
-						if (options.simple) {
-							qs.simple = 1;
-						}
-						if (options.take) {
-							qs.take = options.take;
-						}
-						if (options.folder) {
-							qs.folder = options.folder;
-						}
-						if (!returnAll) {
-							qs.limit = this.getNodeParameter('limit', i) as number;
-						}
-
-						responseData = await this.helpers.httpRequestWithAuthentication.call(
-							this,
-							'pageCrawlApi',
-							{
-								method: 'GET',
-								url: `${baseUrl}/api${endpoint}`,
-								qs,
-								json: true,
-							},
-						);
-
-						if (!returnAll && Array.isArray(responseData)) {
-							responseData = responseData.slice(0, qs.limit);
-						}
-					} else if (operation === 'get') {
+					if (operation === 'get') {
 						const pageId = getPageId(i);
 						const options = this.getNodeParameter('options', i) as any;
 						const qs: any = {};
@@ -489,7 +578,12 @@ export class PageCrawl implements INodeType {
 						const name = this.getNodeParameter('name', i) as string;
 						const frequency = this.getNodeParameter('frequency', i) as number;
 						const elements = this.getNodeParameter('elements', i) as any;
+						const actions = this.getNodeParameter('actions', i, {}) as any;
 						const additionalFields = this.getNodeParameter('additionalFields', i) as any;
+						const rulesEnabled = this.getNodeParameter('rules_enabled', i, false) as boolean;
+						const rulesAnd = this.getNodeParameter('rules_and', i, false) as boolean;
+						const recordAlways = this.getNodeParameter('record_always', i, false) as boolean;
+						const rules = this.getNodeParameter('rules', i, {}) as any;
 
 						const body: any = {
 							url,
@@ -497,6 +591,22 @@ export class PageCrawl implements INodeType {
 							frequency,
 							elements: elements.element || [],
 						};
+
+						// Add actions if provided
+						if (actions && actions.action) {
+							body.actions = actions.action;
+						}
+
+						// Add rules settings if enabled
+						if (rulesEnabled) {
+							body.rules_enabled = true;
+							body.rules_and = rulesAnd;
+							body.record_always = recordAlways;
+							// Add rules if provided
+							if (rules && rules.rule) {
+								body.rules = rules.rule;
+							}
+						}
 
 						// Add all additional fields
 						Object.assign(body, additionalFields);
