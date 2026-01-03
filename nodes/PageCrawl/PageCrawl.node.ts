@@ -792,7 +792,7 @@ export class PageCrawl implements INodeType {
 							this,
 							'pageCrawlApi',
 							{
-								method: 'POST',
+								method: 'PUT',
 								url: `${baseUrl}/api/pages/${pageId}/check`,
 								qs,
 								json: true,

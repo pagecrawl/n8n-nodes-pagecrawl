@@ -162,6 +162,39 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch
 5. Open a Pull Request
 
+## Testing
+
+### Unit Tests
+
+Run unit tests (mocked, no API connection required):
+
+```bash
+npm test
+```
+
+### Integration Tests
+
+Integration tests connect to a real PageCrawl API to verify operations work correctly.
+
+1. Copy the example environment file:
+   ```bash
+   cp .env.test.example .env.test
+   ```
+
+2. Edit `.env.test` with your test credentials:
+   ```bash
+   PAGECRAWL_TEST_API_KEY=your-api-key-here
+   PAGECRAWL_TEST_WORKSPACE_ID=your-workspace-id-here
+   PAGECRAWL_TEST_BASE_URL=https://pagecrawl.test
+   ```
+
+3. Run integration tests:
+   ```bash
+   npm run test:integration
+   ```
+
+**Note:** Integration tests will be skipped if environment variables are not configured.
+
 ## Changelog
 
 ### 0.1.0

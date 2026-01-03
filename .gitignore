@@ -7,5 +7,6 @@ dist/
 *.js.map
 !nodes/**/*.json
 .env
+.env.test
 .vscode/
 .idea/package-lock.json

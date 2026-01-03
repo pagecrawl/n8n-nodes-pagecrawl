@@ -174,7 +174,7 @@ describe('PageCrawl Node Operations', () => {
 				mockExecuteFunctions,
 				'pageCrawlApi',
 				expect.objectContaining({
-					method: 'POST',
+					method: 'PUT',
 					url: 'https://pagecrawl.io/api/pages/123/check',
 				})
 			);
