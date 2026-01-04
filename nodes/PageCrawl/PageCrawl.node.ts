@@ -69,9 +69,9 @@ export class PageCrawl implements INodeType {
 				displayName: 'Workspace',
 				name: 'workspace',
 				type: 'resourceLocator',
-				required: false,
+				required: true,
 				default: { mode: 'list', value: '' },
-				description: 'Select workspace (auto-selected if you have only one)',
+				description: 'Select workspace to use for this operation',
 				modes: [
 					{
 						displayName: 'From List',
@@ -280,12 +280,20 @@ export class PageCrawl implements INodeType {
 			): Promise<INodeListSearchResult> {
 				const baseUrl = 'https://pagecrawl.io';
 
+				// Get workspace ID - return empty if not selected
+				const workspaceLocator = this.getNodeParameter('workspace', 0, {}) as IDataObject;
+				const workspaceId = (workspaceLocator?.value as string) || '';
+				if (!workspaceId) {
+					return { results: [] };
+				}
+
 				const response = await this.helpers.httpRequestWithAuthentication.call(
 					this,
 					'pageCrawlApi',
 					{
 						method: 'GET',
 						url: `${baseUrl}/api/pages`,
+						qs: { workspace_id: workspaceId },
 						json: true,
 					},
 				);
@@ -317,6 +325,13 @@ export class PageCrawl implements INodeType {
 			): Promise<INodeListSearchResult> {
 				const baseUrl = 'https://pagecrawl.io';
 
+				// Get workspace ID - return empty if not selected
+				const workspaceLocator = this.getNodeParameter('workspace', 0, {}) as IDataObject;
+				const workspaceId = (workspaceLocator?.value as string) || '';
+				if (!workspaceId) {
+					return { results: [] };
+				}
+
 				try {
 					const response = await this.helpers.httpRequestWithAuthentication.call(
 						this,
@@ -324,6 +339,7 @@ export class PageCrawl implements INodeType {
 						{
 							method: 'GET',
 							url: `${baseUrl}/api/templates`,
+							qs: { workspace_id: workspaceId },
 							json: true,
 						},
 					);
@@ -401,6 +417,13 @@ export class PageCrawl implements INodeType {
 			): Promise<INodeListSearchResult> {
 				const baseUrl = 'https://pagecrawl.io';
 
+				// Get workspace ID - return empty if not selected
+				const workspaceLocator = this.getNodeParameter('workspace', 0, {}) as IDataObject;
+				const workspaceId = (workspaceLocator?.value as string) || '';
+				if (!workspaceId) {
+					return { results: [] };
+				}
+
 				try {
 					const response = await this.helpers.httpRequestWithAuthentication.call(
 						this,
@@ -408,7 +431,7 @@ export class PageCrawl implements INodeType {
 						{
 							method: 'GET',
 							url: `${baseUrl}/api/folders`,
-							qs: { all: true },
+							qs: { all: true, workspace_id: workspaceId },
 							json: true,
 						},
 					);
@@ -454,6 +477,13 @@ export class PageCrawl implements INodeType {
 			): Promise<INodeListSearchResult> {
 				const baseUrl = 'https://pagecrawl.io';
 
+				// Get workspace ID - return empty if not selected
+				const workspaceLocator = this.getNodeParameter('workspace', 0, {}) as IDataObject;
+				const workspaceId = (workspaceLocator?.value as string) || '';
+				if (!workspaceId) {
+					return { results: [] };
+				}
+
 				try {
 					const response = await this.helpers.httpRequestWithAuthentication.call(
 						this,
@@ -461,6 +491,7 @@ export class PageCrawl implements INodeType {
 						{
 							method: 'GET',
 							url: `${baseUrl}/api/auths`,
+							qs: { workspace_id: workspaceId },
 							json: true,
 						},
 					);
@@ -513,37 +544,16 @@ export class PageCrawl implements INodeType {
 			return [];
 		};
 
-		// Helper to get workspace ID, auto-selecting if only one exists
-		const getWorkspaceId = async (index: number): Promise<string> => {
+		// Helper to get workspace ID from the required workspace field
+		const getWorkspaceId = (index: number): string => {
 			const workspaceLocator = this.getNodeParameter('workspace', index, {}) as IDataObject;
 			const workspaceId = (workspaceLocator?.value as string) || '';
 
-			if (workspaceId) {
-				return workspaceId;
+			if (!workspaceId) {
+				throw new NodeOperationError(this.getNode(), 'Workspace is required', { itemIndex: index });
 			}
 
-			// Fetch workspaces and auto-select if only one
-			const response = await this.helpers.httpRequestWithAuthentication.call(
-				this,
-				'pageCrawlApi',
-				{
-					method: 'GET',
-					url: `${baseUrl}/api/user`,
-					json: true,
-				},
-			);
-
-			const workspaces = response.workspaces || response.user?.workspaces || [];
-
-			if (workspaces.length === 1) {
-				return String(workspaces[0].id);
-			}
-
-			if (workspaces.length === 0) {
-				throw new NodeOperationError(this.getNode(), 'No workspaces found', { itemIndex: index });
-			}
-
-			throw new NodeOperationError(this.getNode(), 'Please select a workspace - multiple workspaces available', { itemIndex: index });
+			return workspaceId;
 		};
 
 		for (let i = 0; i < items.length; i++) {
@@ -557,8 +567,9 @@ export class PageCrawl implements INodeType {
 				if (resource === 'page') {
 					if (operation === 'get') {
 						const pageId = getPageId(i);
+						const workspaceId = getWorkspaceId(i);
 						const options = this.getNodeParameter('options', i) as any;
-						const qs: any = {};
+						const qs: any = { workspace_id: workspaceId };
 
 						if (options.simple) {
 							qs.simple = 1;
@@ -580,8 +591,9 @@ export class PageCrawl implements INodeType {
 					} else if (operation === 'createSimple') {
 						const url = this.getNodeParameter('url', i) as string;
 						const name = this.getNodeParameter('name', i, '') as string;
+						const workspaceId = getWorkspaceId(i);
 						const additionalFields = this.getNodeParameter('additionalFields', i) as any;
-						const body: any = { url };
+						const body: any = { url, workspace_id: workspaceId };
 
 						if (name) {
 							body.name = name;
@@ -669,9 +681,9 @@ export class PageCrawl implements INodeType {
 						if (!body.template_id || body.template_id === 0) delete body.template_id;
 						if (!body.auth_id || body.auth_id === 0) delete body.auth_id;
 
-						// Auto-select workspace if not set
+						// Use selected workspace
 						if (!body.workspace_id) {
-							body.workspace_id = await getWorkspaceId(i);
+							body.workspace_id = getWorkspaceId(i);
 						}
 
 						// Transform fixedCollection fields to arrays
@@ -720,10 +732,12 @@ export class PageCrawl implements INodeType {
 						);
 					} else if (operation === 'update') {
 						const pageId = getPageId(i);
+						const workspaceId = getWorkspaceId(i);
 						const updateFields = this.getNodeParameter('updateFields', i) as any;
 						const additionalFields = this.getNodeParameter('additionalFields', i) as any;
 
 						const body: any = { ...updateFields, ...additionalFields };
+						const qs: any = { workspace_id: workspaceId };
 
 						// Convert tags from comma-separated string to array
 						if (typeof body.tags === 'string' && body.tags) {
@@ -799,12 +813,14 @@ export class PageCrawl implements INodeType {
 							{
 								method: 'PUT',
 								url: `${baseUrl}/api/pages/${pageId}`,
+								qs,
 								body,
 								json: true,
 							},
 						);
 					} else if (operation === 'delete') {
 						const pageId = getPageId(i);
+						const workspaceId = getWorkspaceId(i);
 
 						responseData = await this.helpers.httpRequestWithAuthentication.call(
 							this,
@@ -812,6 +828,7 @@ export class PageCrawl implements INodeType {
 							{
 								method: 'DELETE',
 								url: `${baseUrl}/api/pages/${pageId}`,
+								qs: { workspace_id: workspaceId },
 								json: true,
 							},
 						);
@@ -819,8 +836,9 @@ export class PageCrawl implements INodeType {
 						responseData = { success: true, deleted: pageId };
 					} else if (operation === 'runCheckNow') {
 						const pageId = getPageId(i);
+						const workspaceId = getWorkspaceId(i);
 						const options = this.getNodeParameter('runCheckOptions', i) as any;
-						const qs: any = {};
+						const qs: any = { workspace_id: workspaceId };
 
 						if (options.skip_first_notification) {
 							qs.skip_first_notification = 1;
@@ -841,10 +859,11 @@ export class PageCrawl implements INodeType {
 					}
 				} else if (resource === 'check') {
 					const pageId = getPageId(i);
+					const workspaceId = getWorkspaceId(i);
 
 					if (operation === 'getHistory') {
 						const options = this.getNodeParameter('options', i) as any;
-						const qs: any = {};
+						const qs: any = { workspace_id: workspaceId };
 
 						// Default to simple mode unless advanced is enabled
 						if (!options.advanced) {
@@ -873,6 +892,7 @@ export class PageCrawl implements INodeType {
 							{
 								method: 'GET',
 								url: `${baseUrl}/api/pages/${pageId}/checks/${checkId}/diff.png`,
+								qs: { workspace_id: workspaceId },
 								encoding: 'arraybuffer',
 							},
 						) as Buffer;
@@ -899,6 +919,7 @@ export class PageCrawl implements INodeType {
 							{
 								method: 'GET',
 								url: `${baseUrl}/api/pages/${pageId}/checks/${checkId}/diff.html`,
+								qs: { workspace_id: workspaceId },
 								headers: {
 									Accept: 'text/html',
 								},
@@ -919,6 +940,7 @@ export class PageCrawl implements INodeType {
 							{
 								method: 'GET',
 								url: `${baseUrl}/api/pages/${pageId}/checks/${checkId}/diff.markdown`,
+								qs: { workspace_id: workspaceId },
 								headers: {
 									Accept: 'text/markdown',
 								},
@@ -933,6 +955,7 @@ export class PageCrawl implements INodeType {
 					}
 				} else if (resource === 'screenshot') {
 					const pageId = getPageId(i);
+					const workspaceId = getWorkspaceId(i);
 					const checkId = this.getNodeParameter('checkId', i, 'latest') as string;
 					let endpoint = '';
 
@@ -943,7 +966,7 @@ export class PageCrawl implements INodeType {
 					}
 
 					const previous = operation === 'getScreenshot' ? this.getNodeParameter('previous', i, false) as boolean : false;
-					const qs: any = {};
+					const qs: any = { workspace_id: workspaceId };
 					if (previous) {
 						qs.previous = 1;
 					}

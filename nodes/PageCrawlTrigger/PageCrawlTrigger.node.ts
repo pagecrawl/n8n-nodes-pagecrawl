@@ -196,12 +196,20 @@ export class PageCrawlTrigger implements INodeType {
 			): Promise<INodeListSearchResult> {
 				const baseUrl = 'https://pagecrawl.io';
 
+				// Get workspace ID - return empty if not selected
+				const workspaceLocator = this.getNodeParameter('workspace', 0, {}) as IDataObject;
+				const workspaceId = (workspaceLocator?.value as string) || '';
+				if (!workspaceId) {
+					return { results: [] };
+				}
+
 				const response = await this.helpers.httpRequestWithAuthentication.call(
 					this,
 					'pageCrawlApi',
 					{
 						method: 'GET',
 						url: `${baseUrl}/api/pages`,
+						qs: { workspace_id: workspaceId },
 						json: true,
 					},
 				);
@@ -235,6 +243,8 @@ export class PageCrawlTrigger implements INodeType {
 				const webhookData = this.getWorkflowStaticData('node');
 				const webhookUrl = this.getNodeWebhookUrl('default');
 				const baseUrl = 'https://pagecrawl.io';
+				const workspaceLocator = this.getNodeParameter('workspace', { mode: 'list', value: '' }) as IDataObject;
+				const workspaceId = (workspaceLocator.value as string) || '';
 
 				if (!webhookData.webhookId) {
 					return false;
@@ -247,6 +257,7 @@ export class PageCrawlTrigger implements INodeType {
 						{
 							method: 'GET',
 							url: `${baseUrl}/api/hooks`,
+							qs: workspaceId ? { workspace_id: workspaceId } : {},
 							json: true,
 						},
 					);

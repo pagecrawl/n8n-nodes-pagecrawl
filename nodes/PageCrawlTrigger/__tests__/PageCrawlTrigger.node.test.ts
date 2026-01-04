@@ -133,6 +133,7 @@ describe('PageCrawlTrigger Webhook Methods', () => {
 	describe('checkExists', () => {
 		it('should return false when no webhookId stored', async () => {
 			mockHookFunctions.getWorkflowStaticData.mockReturnValue({});
+			mockHookFunctions.getNodeParameter.mockReturnValueOnce({ mode: 'list', value: '1' }); // workspace
 
 			const boundCheckExists = node.webhookMethods.default.checkExists.bind(mockHookFunctions);
 			const result = await boundCheckExists();
@@ -146,6 +147,7 @@ describe('PageCrawlTrigger Webhook Methods', () => {
 
 			mockHookFunctions.getWorkflowStaticData.mockReturnValue({ webhookId });
 			mockHookFunctions.getNodeWebhookUrl.mockReturnValue(webhookUrl);
+			mockHookFunctions.getNodeParameter.mockReturnValueOnce({ mode: 'list', value: '1' }); // workspace
 			mockHookFunctions.helpers.httpRequestWithAuthentication.call = jest.fn().mockResolvedValue([
 				{ id: webhookId, target_url: webhookUrl },
 			]);
@@ -161,6 +163,7 @@ describe('PageCrawlTrigger Webhook Methods', () => {
 
 			mockHookFunctions.getWorkflowStaticData.mockReturnValue({ webhookId });
 			mockHookFunctions.getNodeWebhookUrl.mockReturnValue('https://n8n.example.com/webhook/pagecrawl');
+			mockHookFunctions.getNodeParameter.mockReturnValueOnce({ mode: 'list', value: '1' }); // workspace
 			mockHookFunctions.helpers.httpRequestWithAuthentication.call = jest.fn().mockResolvedValue([
 				{ id: webhookId, target_url: 'https://different-url.com/webhook' },
 			]);

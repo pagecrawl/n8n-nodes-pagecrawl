@@ -114,6 +114,7 @@ describe('PageCrawl Node Operations', () => {
 				.mockReturnValueOnce('page') // resource
 				.mockReturnValueOnce('get') // operation
 				.mockReturnValueOnce({ mode: 'slug', value: '123' }) // pageId (resourceLocator)
+				.mockReturnValueOnce({ mode: 'id', value: '456' }) // workspace (resourceLocator)
 				.mockReturnValueOnce({}); // options
 
 			mockExecuteFunctions.helpers.httpRequestWithAuthentication.call = jest
@@ -129,6 +130,7 @@ describe('PageCrawl Node Operations', () => {
 				expect.objectContaining({
 					method: 'GET',
 					url: 'https://pagecrawl.io/api/pages/123',
+					qs: { workspace_id: '456' },
 				})
 			);
 		});
@@ -137,7 +139,8 @@ describe('PageCrawl Node Operations', () => {
 			mockExecuteFunctions.getNodeParameter
 				.mockReturnValueOnce('page') // resource
 				.mockReturnValueOnce('delete') // operation
-				.mockReturnValueOnce({ mode: 'slug', value: '123' }); // pageId (resourceLocator)
+				.mockReturnValueOnce({ mode: 'slug', value: '123' }) // pageId (resourceLocator)
+				.mockReturnValueOnce({ mode: 'id', value: '456' }); // workspace (resourceLocator)
 
 			mockExecuteFunctions.helpers.httpRequestWithAuthentication.call = jest
 				.fn()
@@ -152,6 +155,7 @@ describe('PageCrawl Node Operations', () => {
 				expect.objectContaining({
 					method: 'DELETE',
 					url: 'https://pagecrawl.io/api/pages/123',
+					qs: { workspace_id: '456' },
 				})
 			);
 		});
@@ -161,6 +165,7 @@ describe('PageCrawl Node Operations', () => {
 				.mockReturnValueOnce('page') // resource
 				.mockReturnValueOnce('runCheckNow') // operation
 				.mockReturnValueOnce({ mode: 'slug', value: '123' }) // pageId (resourceLocator)
+				.mockReturnValueOnce({ mode: 'id', value: '456' }) // workspace (resourceLocator)
 				.mockReturnValueOnce({}); // runCheckOptions
 
 			mockExecuteFunctions.helpers.httpRequestWithAuthentication.call = jest
@@ -176,6 +181,7 @@ describe('PageCrawl Node Operations', () => {
 				expect.objectContaining({
 					method: 'PUT',
 					url: 'https://pagecrawl.io/api/pages/123/check',
+					qs: { workspace_id: '456' },
 				})
 			);
 		});
@@ -186,7 +192,8 @@ describe('PageCrawl Node Operations', () => {
 			mockExecuteFunctions.getNodeParameter
 				.mockReturnValueOnce('page') // resource
 				.mockReturnValueOnce('get') // operation
-				.mockReturnValueOnce({ mode: 'slug', value: '123' }) // pageId
+				.mockReturnValueOnce({ mode: 'slug', value: '123' }) // pageId (resourceLocator)
+				.mockReturnValueOnce({ mode: 'id', value: '456' }) // workspace (resourceLocator)
 				.mockReturnValueOnce({}); // options
 
 			mockExecuteFunctions.continueOnFail.mockReturnValue(true);
@@ -320,7 +327,7 @@ describe('PageCrawl Node Additional Fields', () => {
 
 			expect(field).toBeDefined();
 			expect(field?.type).toBe('resourceLocator');
-			expect(field?.required).toBe(false); // Optional - auto-selects if user has only one workspace
+			expect(field?.required).toBe(true); // Required - user must select workspace
 		});
 
 		it('should have folder_id field as resourceLocator', () => {
