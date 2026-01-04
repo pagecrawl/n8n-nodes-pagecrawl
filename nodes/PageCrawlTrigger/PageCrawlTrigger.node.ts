@@ -49,7 +49,7 @@ export class PageCrawlTrigger implements INodeType {
 				type: 'resourceLocator',
 				required: true,
 				default: { mode: 'list', value: '' },
-				description: 'Select the workspace containing the pages you want to monitor.',
+				description: 'Select the workspace containing the pages you want to monitor',
 				modes: [
 					{
 						displayName: 'From List',
@@ -73,7 +73,7 @@ export class PageCrawlTrigger implements INodeType {
 				name: 'page',
 				type: 'resourceLocator',
 				default: { mode: 'list', value: '' },
-				description: 'Select a page to monitor or leave empty for all pages in the workspace.',
+				description: 'Select a page to monitor or leave empty for all pages in the workspace',
 				modes: [
 					{
 						displayName: 'From List',
@@ -140,7 +140,7 @@ export class PageCrawlTrigger implements INodeType {
 				name: 'sendTestOnListen',
 				type: 'boolean',
 				default: true,
-				description: 'Whether to automatically send a test event when clicking "Listen for Test Event"',
+				description: 'Whether to automatically send a test event when clicking "Listen for Test Event" or "Execute Step"',
 			},
 		],
 	};

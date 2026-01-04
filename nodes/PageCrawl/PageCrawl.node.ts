@@ -154,7 +154,7 @@ export class PageCrawl implements INodeType {
 				// All frequency options (Daily is 1440, used as default)
 				const allFrequencies = [
 					{ name: 'Every 1 Minute', value: 1 },
-					{ name: 'Every 2 Minute', value: 2 },
+					{ name: 'Every 2 Minutes', value: 2 },
 					{ name: 'Every 3 Minutes', value: 3 },
 					{ name: 'Every 5 Minutes', value: 5 },
 					{ name: 'Every 15 Minutes', value: 15 },
