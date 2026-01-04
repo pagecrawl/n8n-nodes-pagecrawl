@@ -80,7 +80,7 @@ export const pageFields: INodeProperties[] = [
 				typeOptions: {
 					searchListMethod: 'pageSearch',
 					searchable: true,
-				},
+					},
 			},
 			{
 				displayName: 'By Slug',
@@ -301,7 +301,7 @@ export const pageFields: INodeProperties[] = [
 						typeOptions: {
 							searchListMethod: 'folderSearch',
 							searchable: true,
-						},
+							},
 					},
 					{
 						displayName: 'By ID',
@@ -325,7 +325,7 @@ export const pageFields: INodeProperties[] = [
 						typeOptions: {
 							searchListMethod: 'templateSearch',
 							searchable: true,
-						},
+							},
 					},
 					{
 						displayName: 'By ID',
@@ -950,7 +950,7 @@ export const pageFields: INodeProperties[] = [
 						typeOptions: {
 							searchListMethod: 'folderSearch',
 							searchable: true,
-						},
+							},
 					},
 					{
 						displayName: 'By ID',
@@ -974,7 +974,7 @@ export const pageFields: INodeProperties[] = [
 						typeOptions: {
 							searchListMethod: 'templateSearch',
 							searchable: true,
-						},
+							},
 					},
 					{
 						displayName: 'By ID',
@@ -998,7 +998,7 @@ export const pageFields: INodeProperties[] = [
 						typeOptions: {
 							searchListMethod: 'authSearch',
 							searchable: true,
-						},
+							},
 					},
 					{
 						displayName: 'By ID',

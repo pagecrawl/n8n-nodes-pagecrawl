@@ -74,10 +74,11 @@ describe('PageCrawl Node', () => {
 			expect(node.description.requestDefaults?.baseURL).toBe('https://pagecrawl.io/api');
 		});
 
-		it('should have JSON content type headers', () => {
+		it('should have JSON content type headers and API client header', () => {
 			expect(node.description.requestDefaults?.headers).toEqual({
 				Accept: 'application/json',
 				'Content-Type': 'application/json',
+				'X-Api-Client': expect.stringMatching(/^n8n\/\d+\.\d+\.\d+$/),
 			});
 		});
 	});

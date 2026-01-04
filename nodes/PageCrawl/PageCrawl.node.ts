@@ -12,6 +12,9 @@ import {
 import { pageOperations, pageFields } from './descriptions/PageDescription';
 import { checkOperations, checkFields } from './descriptions/CheckDescription';
 import { screenshotOperations, screenshotFields } from './descriptions/ScreenshotDescription';
+import { version } from '../../package.json';
+
+const API_CLIENT_HEADER = { 'X-Api-Client': `n8n/${version}` };
 
 export class PageCrawl implements INodeType {
 	description: INodeTypeDescription = {
@@ -38,6 +41,7 @@ export class PageCrawl implements INodeType {
 			headers: {
 				Accept: 'application/json',
 				'Content-Type': 'application/json',
+				...API_CLIENT_HEADER,
 			},
 		},
 		properties: [
@@ -111,6 +115,7 @@ export class PageCrawl implements INodeType {
 						{
 							method: 'GET',
 							url: `${baseUrl}/api/user`,
+							headers: API_CLIENT_HEADER,
 							json: true,
 						},
 					);
@@ -175,6 +180,7 @@ export class PageCrawl implements INodeType {
 						{
 							method: 'GET',
 							url: `${baseUrl}/api/user`,
+							headers: API_CLIENT_HEADER,
 							json: true,
 						},
 					);
@@ -202,6 +208,7 @@ export class PageCrawl implements INodeType {
 						{
 							method: 'GET',
 							url: `${baseUrl}/api/user`,
+							headers: API_CLIENT_HEADER,
 							json: true,
 						},
 					);
@@ -248,6 +255,7 @@ export class PageCrawl implements INodeType {
 						{
 							method: 'GET',
 							url: `${baseUrl}/api/workspaces/${workspaceId}/ai/available-models`,
+							headers: API_CLIENT_HEADER,
 							json: true,
 						},
 					);
@@ -294,6 +302,7 @@ export class PageCrawl implements INodeType {
 						method: 'GET',
 						url: `${baseUrl}/api/pages`,
 						qs: { workspace_id: workspaceId },
+						headers: API_CLIENT_HEADER,
 						json: true,
 					},
 				);
@@ -340,6 +349,7 @@ export class PageCrawl implements INodeType {
 							method: 'GET',
 							url: `${baseUrl}/api/templates`,
 							qs: { workspace_id: workspaceId },
+							headers: API_CLIENT_HEADER,
 							json: true,
 						},
 					);
@@ -382,6 +392,7 @@ export class PageCrawl implements INodeType {
 						{
 							method: 'GET',
 							url: `${baseUrl}/api/user`,
+							headers: API_CLIENT_HEADER,
 							json: true,
 						},
 					);
@@ -432,6 +443,7 @@ export class PageCrawl implements INodeType {
 							method: 'GET',
 							url: `${baseUrl}/api/folders`,
 							qs: { all: true, workspace_id: workspaceId },
+							headers: API_CLIENT_HEADER,
 							json: true,
 						},
 					);
@@ -492,6 +504,7 @@ export class PageCrawl implements INodeType {
 							method: 'GET',
 							url: `${baseUrl}/api/auths`,
 							qs: { workspace_id: workspaceId },
+							headers: API_CLIENT_HEADER,
 							json: true,
 						},
 					);
@@ -585,6 +598,7 @@ export class PageCrawl implements INodeType {
 								method: 'GET',
 								url: `${baseUrl}/api/pages/${pageId}`,
 								qs,
+								headers: API_CLIENT_HEADER,
 								json: true,
 							},
 						);
@@ -615,6 +629,7 @@ export class PageCrawl implements INodeType {
 								method: 'POST',
 								url: `${baseUrl}/api/track-simple`,
 								body,
+								headers: API_CLIENT_HEADER,
 								json: true,
 							},
 						);
@@ -727,6 +742,7 @@ export class PageCrawl implements INodeType {
 								method: 'POST',
 								url: `${baseUrl}/api/pages`,
 								body,
+								headers: API_CLIENT_HEADER,
 								json: true,
 							},
 						);
@@ -815,6 +831,7 @@ export class PageCrawl implements INodeType {
 								url: `${baseUrl}/api/pages/${pageId}`,
 								qs,
 								body,
+								headers: API_CLIENT_HEADER,
 								json: true,
 							},
 						);
@@ -829,6 +846,7 @@ export class PageCrawl implements INodeType {
 								method: 'DELETE',
 								url: `${baseUrl}/api/pages/${pageId}`,
 								qs: { workspace_id: workspaceId },
+								headers: API_CLIENT_HEADER,
 								json: true,
 							},
 						);
@@ -851,6 +869,7 @@ export class PageCrawl implements INodeType {
 								method: 'PUT',
 								url: `${baseUrl}/api/pages/${pageId}/check`,
 								qs,
+								headers: API_CLIENT_HEADER,
 								json: true,
 							},
 						);
@@ -880,6 +899,7 @@ export class PageCrawl implements INodeType {
 								method: 'GET',
 								url: `${baseUrl}/api/pages/${pageId}/history`,
 								qs,
+								headers: API_CLIENT_HEADER,
 								json: true,
 							},
 						);
@@ -893,6 +913,7 @@ export class PageCrawl implements INodeType {
 								method: 'GET',
 								url: `${baseUrl}/api/pages/${pageId}/checks/${checkId}/diff.png`,
 								qs: { workspace_id: workspaceId },
+								headers: API_CLIENT_HEADER,
 								encoding: 'arraybuffer',
 							},
 						) as Buffer;
@@ -921,6 +942,7 @@ export class PageCrawl implements INodeType {
 								url: `${baseUrl}/api/pages/${pageId}/checks/${checkId}/diff.html`,
 								qs: { workspace_id: workspaceId },
 								headers: {
+									...API_CLIENT_HEADER,
 									Accept: 'text/html',
 								},
 							},
@@ -942,6 +964,7 @@ export class PageCrawl implements INodeType {
 								url: `${baseUrl}/api/pages/${pageId}/checks/${checkId}/diff.markdown`,
 								qs: { workspace_id: workspaceId },
 								headers: {
+									...API_CLIENT_HEADER,
 									Accept: 'text/markdown',
 								},
 							},
@@ -978,6 +1001,7 @@ export class PageCrawl implements INodeType {
 							method: 'GET',
 							url: `${baseUrl}/api${endpoint}`,
 							qs,
+							headers: API_CLIENT_HEADER,
 							encoding: 'arraybuffer',
 						},
 					) as Buffer;

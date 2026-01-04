@@ -10,6 +10,9 @@ import {
 } from 'n8n-workflow';
 
 import { WEBHOOK_PAYLOAD_FIELDS } from '../PageCrawl/types';
+import { version } from '../../package.json';
+
+const API_CLIENT_HEADER = { 'X-Api-Client': `n8n/${version}` };
 
 export class PageCrawlTrigger implements INodeType {
 	description: INodeTypeDescription = {
@@ -162,6 +165,7 @@ export class PageCrawlTrigger implements INodeType {
 						{
 							method: 'GET',
 							url: `${baseUrl}/api/user`,
+							headers: API_CLIENT_HEADER,
 							json: true,
 						},
 					);
@@ -210,6 +214,7 @@ export class PageCrawlTrigger implements INodeType {
 						method: 'GET',
 						url: `${baseUrl}/api/pages`,
 						qs: { workspace_id: workspaceId },
+						headers: API_CLIENT_HEADER,
 						json: true,
 					},
 				);
@@ -258,6 +263,7 @@ export class PageCrawlTrigger implements INodeType {
 							method: 'GET',
 							url: `${baseUrl}/api/hooks`,
 							qs: workspaceId ? { workspace_id: workspaceId } : {},
+							headers: API_CLIENT_HEADER,
 							json: true,
 						},
 					);
@@ -324,6 +330,7 @@ export class PageCrawlTrigger implements INodeType {
 							method: 'POST',
 							url: `${baseUrl}/api/hooks`,
 							body,
+							headers: API_CLIENT_HEADER,
 							json: true,
 						},
 					);
@@ -343,6 +350,7 @@ export class PageCrawlTrigger implements INodeType {
 								{
 									method: 'PUT',
 									url: `${baseUrl}/api/hooks/${response.id}/test`,
+									headers: API_CLIENT_HEADER,
 									json: true,
 								},
 							);
@@ -374,6 +382,7 @@ export class PageCrawlTrigger implements INodeType {
 						{
 							method: 'DELETE',
 							url: `${baseUrl}/api/hooks/${webhookData.webhookId}`,
+							headers: API_CLIENT_HEADER,
 							json: true,
 						},
 					);
