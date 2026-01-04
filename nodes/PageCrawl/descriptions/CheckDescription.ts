@@ -74,13 +74,13 @@ export const checkFields: INodeProperties[] = [
 				placeholder: 'e.g. https://pagecrawl.io/app/pages/example-domain',
 				extractValue: {
 					type: 'regex',
-					regex: 'https:\\/\\/pagecrawl\\.io\\/app\\/pages\\/([a-z0-9_-]+)',
+					regex: 'https://pagecrawl\\.io/app/pages/([a-z0-9_-]+)',
 				},
 				validation: [
 					{
 						type: 'regex',
 						properties: {
-							regex: '^https:\\/\\/pagecrawl\\.io\\/app\\/pages\\/[a-z0-9_-]+$',
+							regex: '^https://pagecrawl\\.io/app/pages/[a-z0-9_-]+$',
 							errorMessage: 'Must be a valid PageCrawl page URL (e.g. https://pagecrawl.io/app/pages/my-page)',
 						},
 					},
@@ -90,16 +90,7 @@ export const checkFields: INodeProperties[] = [
 				displayName: 'By ID',
 				name: 'id',
 				type: 'string',
-				placeholder: 'e.g. 12345',
-				validation: [
-					{
-						type: 'regex',
-						properties: {
-							regex: '^[0-9]+$',
-							errorMessage: 'ID must be a number',
-						},
-					},
-				],
+				placeholder: 'e.g. 12345 or my-page-slug',
 			},
 		],
 	},
