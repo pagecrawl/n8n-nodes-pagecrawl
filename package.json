@@ -1,6 +1,6 @@
 {
   "name": "@pagecrawl/n8n-nodes-pagecrawl",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "n8n node for PageCrawl.io - Website monitoring and change detection",
   "keywords": [
     "n8n",
@@ -60,7 +60,7 @@
     "eslint-plugin-n8n-nodes-base": "^1.16.0",
     "jest": "^29.7.0",
     "n8n": "^2.2.0",
-    "n8n-workflow": "~2.2.0",
+    "n8n-workflow": "^2.2.2",
     "ts-jest": "^29.4.6",
     "typescript": "^5.0.0"
   },

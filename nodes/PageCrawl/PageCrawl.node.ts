@@ -888,9 +888,7 @@ export class PageCrawl implements INodeType {
 						if (!options.advanced) {
 							qs.simple = 1;
 						}
-						if (options.take) {
-							qs.take = options.take;
-						}
+						qs.take = options.take ?? 2;
 
 						responseData = await this.helpers.httpRequestWithAuthentication.call(
 							this,

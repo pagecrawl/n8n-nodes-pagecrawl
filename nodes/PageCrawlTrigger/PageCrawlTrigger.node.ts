@@ -85,16 +85,20 @@ export class PageCrawlTrigger implements INodeType {
 						},
 					},
 					{
-						displayName: 'By Slug',
-						name: 'slug',
+						displayName: 'By URL',
+						name: 'url',
 						type: 'string',
-						placeholder: 'e.g. my-page-name',
+						placeholder: 'e.g. https://pagecrawl.io/app/pages/example-domain',
+						extractValue: {
+							type: 'regex',
+							regex: 'https:\\/\\/pagecrawl\\.io\\/app\\/pages\\/([a-z0-9_-]+)',
+						},
 						validation: [
 							{
 								type: 'regex',
 								properties: {
-									regex: '^[a-z0-9-]+$',
-									errorMessage: 'Slug must contain only lowercase letters, numbers, and hyphens',
+									regex: '^https:\\/\\/pagecrawl\\.io\\/app\\/pages\\/[a-z0-9_-]+$',
+									errorMessage: 'Must be a valid PageCrawl page URL (e.g. https://pagecrawl.io/app/pages/my-page)',
 								},
 							},
 						],

@@ -27,10 +27,10 @@ export const pageOperations: INodeProperties[] = [
 				action: 'Create an advanced page',
 			},
 			{
-				name: 'Delete',
-				value: 'delete',
-				description: 'Delete a tracked page',
-				action: 'Delete a page',
+				name: 'Run Check Now',
+				value: 'runCheckNow',
+				description: 'Trigger an immediate check for a page',
+				action: 'Run check now',
 			},
 			{
 				name: 'Get',
@@ -39,16 +39,16 @@ export const pageOperations: INodeProperties[] = [
 				action: 'Get a page',
 			},
 			{
-				name: 'Run Check Now',
-				value: 'runCheckNow',
-				description: 'Trigger an immediate check for a page',
-				action: 'Run check now',
-			},
-			{
 				name: 'Update',
 				value: 'update',
 				description: 'Update a tracked page',
 				action: 'Update a page',
+			},
+			{
+				name: 'Delete',
+				value: 'delete',
+				description: 'Delete a tracked page',
+				action: 'Delete a page',
 			},
 		],
 		default: 'get',
@@ -83,16 +83,20 @@ export const pageFields: INodeProperties[] = [
 					},
 			},
 			{
-				displayName: 'By Slug',
-				name: 'slug',
+				displayName: 'By URL',
+				name: 'url',
 				type: 'string',
-				placeholder: 'e.g. my-page-name',
+				placeholder: 'e.g. https://pagecrawl.io/app/pages/example-domain',
+				extractValue: {
+					type: 'regex',
+					regex: 'https:\\/\\/pagecrawl\\.io\\/app\\/pages\\/([a-z0-9_-]+)',
+				},
 				validation: [
 					{
 						type: 'regex',
 						properties: {
-							regex: '^[a-z0-9-]+$',
-							errorMessage: 'Slug must contain only lowercase letters, numbers, and hyphens',
+							regex: '^https:\\/\\/pagecrawl\\.io\\/app\\/pages\\/[a-z0-9_-]+$',
+							errorMessage: 'Must be a valid PageCrawl page URL (e.g. https://pagecrawl.io/app/pages/my-page)',
 						},
 					},
 				],
@@ -183,6 +187,19 @@ export const pageFields: INodeProperties[] = [
 		default: '',
 		placeholder: 'https://example.com',
 		description: 'The URL to track',
+	},
+	{
+		displayName: 'Title',
+		name: 'name',
+		type: 'string',
+		displayOptions: {
+			show: {
+				resource: ['page'],
+				operation: ['createSimple'],
+			},
+		},
+		default: '',
+		description: 'Optional title for this page (defaults to page title if empty)',
 	},
 	{
 		displayName: 'Tracking Type',
@@ -357,10 +374,9 @@ export const pageFields: INodeProperties[] = [
 		description: 'The URL to track',
 	},
 	{
-		displayName: 'Name',
+		displayName: 'Title',
 		name: 'name',
 		type: 'string',
-		required: true,
 		displayOptions: {
 			show: {
 				resource: ['page'],
@@ -368,7 +384,7 @@ export const pageFields: INodeProperties[] = [
 			},
 		},
 		default: '',
-		description: 'Label for the page',
+		description: 'Optional title for this page (defaults to page title if empty)',
 	},
 	{
 		displayName: 'Tracked Elements',
@@ -1098,11 +1114,11 @@ export const pageFields: INodeProperties[] = [
 				description: 'How often to check for changes',
 			},
 			{
-				displayName: 'Name',
+				displayName: 'Title',
 				name: 'name',
 				type: 'string',
 				default: '',
-				description: 'Label for the page',
+				description: 'Title for this page',
 			},
 			{
 				displayName: 'URL',
