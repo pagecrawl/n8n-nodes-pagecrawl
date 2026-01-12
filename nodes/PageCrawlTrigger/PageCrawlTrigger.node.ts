@@ -112,6 +112,26 @@ export class PageCrawlTrigger implements INodeType {
 				],
 			},
 			{
+				displayName: 'Events',
+				name: 'events',
+				type: 'multiOptions',
+				required: true,
+				options: [
+					{
+						name: 'Change Detected',
+						value: 'change_detected',
+						description: 'Triggered when a monitored page content changes',
+					},
+					{
+						name: 'Error',
+						value: 'error',
+						description: 'Triggered when a page check fails (timeout, blocked, etc.)',
+					},
+				],
+				default: ['change_detected'],
+				description: 'Which events should trigger this workflow',
+			},
+			{
 				displayName: 'Simplify Output',
 				name: 'simplifyOutput',
 				type: 'boolean',
@@ -284,6 +304,7 @@ export class PageCrawlTrigger implements INodeType {
 				const workspaceValue = (workspaceLocator.value as string) || '';
 				const pageLocator = this.getNodeParameter('page', { mode: 'list', value: '' }) as IDataObject;
 				const pageValue = (pageLocator.value as string) || '';
+				const events = this.getNodeParameter('events', ['change_detected']) as string[];
 				const simplifyOutput = this.getNodeParameter('simplifyOutput', true) as boolean;
 				const sendTestOnListen = this.getNodeParameter('sendTestOnListen', true) as boolean;
 				const baseUrl = 'https://pagecrawl.io';
@@ -299,9 +320,15 @@ export class PageCrawlTrigger implements INodeType {
 					payloadFields = this.getNodeParameter('payloadFields', defaultPayloadFields) as string[];
 				}
 
+				// Add event_type to payload fields if both events are selected
+				if (events.includes('change_detected') && events.includes('error') && !payloadFields.includes('event_type')) {
+					payloadFields = [...payloadFields, 'event_type'];
+				}
+
 				const body: IDataObject = {
 					target_url: webhookUrl,
 					event_type: 'n8n',
+					events: events,
 				};
 
 				// Add workspace_id (required)
@@ -400,6 +427,7 @@ export class PageCrawlTrigger implements INodeType {
 	async webhook(this: IWebhookFunctions): Promise<IWebhookResponseData> {
 		const req = this.getRequestObject();
 		const simplifyOutput = this.getNodeParameter('simplifyOutput', true) as boolean;
+		const events = this.getNodeParameter('events', ['change_detected']) as string[];
 
 		const webhookData = req.body as IDataObject;
 
@@ -418,6 +446,11 @@ export class PageCrawlTrigger implements INodeType {
 				pageLink: webhookData.page ? (webhookData.page as IDataObject).link : undefined,
 				contents: webhookData.contents,
 			};
+
+			// Include eventType if both events are selected
+			if (events.includes('change_detected') && events.includes('error')) {
+				responseData.eventType = webhookData.event_type;
+			}
 		}
 
 		return {

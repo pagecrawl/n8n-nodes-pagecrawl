@@ -76,6 +76,13 @@ describe('PageCrawlTrigger Node', () => {
 			expect(simplifyProperty?.type).toBe('boolean');
 			expect(simplifyProperty?.default).toBe(true);
 		});
+
+		it('should have events property with default change_detected', () => {
+			const eventsProperty = node.description.properties.find((p) => p.name === 'events');
+			expect(eventsProperty).toBeDefined();
+			expect(eventsProperty?.type).toBe('multiOptions');
+			expect(eventsProperty?.default).toEqual(['change_detected']);
+		});
 	});
 
 	describe('Webhook Methods', () => {
@@ -184,6 +191,7 @@ describe('PageCrawlTrigger Webhook Methods', () => {
 			mockHookFunctions.getNodeParameter
 				.mockReturnValueOnce({ mode: 'list', value: '1' }) // workspace (resourceLocator)
 				.mockReturnValueOnce({ mode: 'list', value: '' }) // page (resourceLocator)
+				.mockReturnValueOnce(['change_detected']) // events
 				.mockReturnValueOnce(true) // simplifyOutput
 				.mockReturnValueOnce(false); // sendTestOnListen
 
@@ -213,6 +221,7 @@ describe('PageCrawlTrigger Webhook Methods', () => {
 			mockHookFunctions.getNodeParameter
 				.mockReturnValueOnce({ mode: 'list', value: '1' }) // workspace (resourceLocator)
 				.mockReturnValueOnce({ mode: 'slug', value: 'page-123' }) // page (resourceLocator)
+				.mockReturnValueOnce(['change_detected']) // events
 				.mockReturnValueOnce(true) // simplifyOutput
 				.mockReturnValueOnce(false); // sendTestOnListen
 
@@ -295,7 +304,9 @@ describe('PageCrawlTrigger Webhook Handler', () => {
 				difference: 10,
 			},
 		} as any);
-		mockWebhookFunctions.getNodeParameter.mockReturnValueOnce(false); // simplifyOutput
+		mockWebhookFunctions.getNodeParameter
+			.mockReturnValueOnce(false) // simplifyOutput
+			.mockReturnValueOnce(['change_detected']); // events
 
 		const boundWebhook = node.webhook.bind(mockWebhookFunctions);
 		const result = await boundWebhook();
@@ -321,7 +332,9 @@ describe('PageCrawlTrigger Webhook Handler', () => {
 		};
 
 		mockWebhookFunctions.getRequestObject.mockReturnValue({ body: webhookBody } as any);
-		mockWebhookFunctions.getNodeParameter.mockReturnValueOnce(true); // simplifyOutput
+		mockWebhookFunctions.getNodeParameter
+			.mockReturnValueOnce(true) // simplifyOutput
+			.mockReturnValueOnce(['change_detected']); // events
 
 		const boundWebhook = node.webhook.bind(mockWebhookFunctions);
 		await boundWebhook();

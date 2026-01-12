@@ -89,6 +89,7 @@ export interface IWebhook {
 	change_id?: number;
 	target_url: string;
 	event_type?: string;
+	events?: string[];
 	payload_fields?: string[];
 	is_active?: boolean;
 	failures?: number;
@@ -129,6 +130,7 @@ export const WEBHOOK_PAYLOAD_FIELDS: { value: string; description: string }[] = 
 	{ value: 'id', description: 'Unique identifier of this check' },
 	{ value: 'title', description: 'The page title extracted from the monitored page' },
 	{ value: 'status', description: 'Check status (e.g., changed, unchanged, failed)' },
+	{ value: 'event_type', description: 'Type of event that triggered the webhook (change_detected or error)' },
 	{ value: 'content_type', description: 'Document content type (e.g., text/html, text/css, application/json)' },
 	{ value: 'visual_diff', description: 'Visual difference percentage between current and previous screenshots (0-100)' },
 	{ value: 'changed_at', description: 'ISO 8601 timestamp when the change was detected' },
