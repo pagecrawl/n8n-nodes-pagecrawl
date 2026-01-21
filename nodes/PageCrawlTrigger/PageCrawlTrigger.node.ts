@@ -310,7 +310,7 @@ export class PageCrawlTrigger implements INodeType {
 				const baseUrl = 'https://pagecrawl.io';
 
 				// Default payload fields for simplified output
-				const defaultPayloadFields = ['id', 'title', 'status', 'changed_at', 'difference', 'human_difference', 'page', 'contents'];
+				const defaultPayloadFields = ['id', 'title', 'status', 'changed_at', 'difference', 'human_difference', 'short_summary', 'page', 'contents'];
 
 				// Get custom payload fields if not using simplified output
 				let payloadFields: string[];
@@ -441,6 +441,7 @@ export class PageCrawlTrigger implements INodeType {
 				changedAt: webhookData.changed_at,
 				difference: webhookData.difference,
 				humanDifference: webhookData.human_difference,
+				shortSummary: webhookData.short_summary,
 				pageUrl: webhookData.page ? (webhookData.page as IDataObject).url : undefined,
 				pageName: webhookData.page ? (webhookData.page as IDataObject).name : undefined,
 				pageLink: webhookData.page ? (webhookData.page as IDataObject).link : undefined,

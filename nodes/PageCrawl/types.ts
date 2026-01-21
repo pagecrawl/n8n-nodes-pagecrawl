@@ -137,6 +137,7 @@ export const WEBHOOK_PAYLOAD_FIELDS: { value: string; description: string }[] = 
 	{ value: 'contents', description: 'Current content of tracked elements or full page text' },
 	{ value: 'difference', description: 'Numerical difference value (e.g., price change percentage, text difference)' },
 	{ value: 'human_difference', description: 'Human-readable description of the change (e.g., "+5.2% increased")' },
+	{ value: 'short_summary', description: 'AI summary if available, otherwise type-specific format (e.g., "100 ↗ 150", "In Stock → Out of Stock", "15% visual difference")' },
 	{ value: 'page_screenshot_image', description: 'URL to the screenshot image of the current page state' },
 	{ value: 'text_difference_image', description: 'URL to the image highlighting text differences' },
 	{ value: 'html_difference', description: 'HTML diff markup showing added/removed content with highlighting' },
