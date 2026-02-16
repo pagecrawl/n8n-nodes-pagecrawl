@@ -560,7 +560,7 @@ export class PageCrawl implements INodeType {
 		// Helper to get workspace ID from the required workspace field
 		const getWorkspaceId = (index: number): string => {
 			const workspaceLocator = this.getNodeParameter('workspace', index, {}) as IDataObject;
-			const workspaceId = (workspaceLocator?.value as string) || '';
+			const workspaceId = workspaceLocator?.value as string;
 
 			if (!workspaceId) {
 				throw new NodeOperationError(this.getNode(), 'Workspace is required', { itemIndex: index });

@@ -591,6 +591,7 @@ export const pageFields: INodeProperties[] = [
 							{ name: 'Wait for Element', value: 'wait_element' },
 							{ name: 'Scroll to Bottom', value: 'scroll_to_bottom' },
 							{ name: 'Remove Element', value: 'remove_element' },
+							{ name: 'Remove Elements by Text', value: 'remove_text' },
 							{ name: 'Hide Cookie Banners', value: 'remove_cookies_v2' },
 							{ name: 'Hover Element', value: 'hover' },
 							{ name: 'Run JavaScript', value: 'javascript' },
@@ -637,6 +638,19 @@ export const pageFields: INodeProperties[] = [
 						displayOptions: {
 							show: {
 								type: ['wait'],
+							},
+						},
+					},
+					{
+						displayName: 'Text to Find',
+						name: 'value',
+						type: 'string',
+						default: '',
+						placeholder: 'e.g. Log in, Sign up, Cookie',
+						description: 'Text content to search for. Elements containing this text will be removed along with their parent container.',
+						displayOptions: {
+							show: {
+								type: ['remove_text'],
 							},
 						},
 					},

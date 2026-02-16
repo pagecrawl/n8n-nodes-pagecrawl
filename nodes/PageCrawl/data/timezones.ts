@@ -10,7 +10,7 @@ export const TIMEZONES = [
 	{ name: 'Africa/Lagos', value: 'Africa/Lagos' },
 	{ name: 'Africa/Nairobi', value: 'Africa/Nairobi' },
 	{ name: 'America/Anchorage', value: 'America/Anchorage' },
-	{ name: 'America/Argentina/Buenos_Aires', value: 'America/Buenos_Aires' },
+	{ name: 'America/Argentina/Buenos_Aires', value: 'America/Argentina/Buenos_Aires' },
 	{ name: 'America/Bogota', value: 'America/Bogota' },
 	{ name: 'America/Caracas', value: 'America/Caracas' },
 	{ name: 'America/Chicago', value: 'America/Chicago' },

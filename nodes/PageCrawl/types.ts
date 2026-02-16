@@ -14,7 +14,7 @@ export interface INotificationRule {
 
 export interface IPageAction {
 	type: 'scroll_to_bottom' | 'remove_dates' | 'remove_cookies' | 'remove_cookies_v2' |
-		'click' | 'hover' | 'type' | 'select' | 'remove_element' |
+		'click' | 'hover' | 'type' | 'select' | 'remove_element' | 'remove_text' |
 		'wait_element' | 'wait' | 'javascript' | 'back';
 	selector?: string;
 	value?: string | number;
