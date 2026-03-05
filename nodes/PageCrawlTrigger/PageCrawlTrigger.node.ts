@@ -222,37 +222,41 @@ export class PageCrawlTrigger implements INodeType {
 					return { results: [] };
 				}
 
-				const response = await this.helpers.httpRequestWithAuthentication.call(
-					this,
-					'pageCrawlApi',
-					{
-						method: 'GET',
-						url: `${baseUrl}/api/pages`,
-						qs: { workspace_id: workspaceId },
-						headers: API_CLIENT_HEADER,
-						json: true,
-					},
-				);
-
-				const pages = response.data || response;
-
-				let results = pages.map((page: any) => ({
-					name: page.name || page.url,
-					value: page.slug,
-					url: `https://pagecrawl.io/app/pages/${page.slug}`,
-				}));
-
-				// Filter results if search term provided
-				if (filter) {
-					const filterLower = filter.toLowerCase();
-					results = results.filter(
-						(page: any) =>
-							page.name.toLowerCase().includes(filterLower) ||
-							page.value.toLowerCase().includes(filterLower),
+				try {
+					const response = await this.helpers.httpRequestWithAuthentication.call(
+						this,
+						'pageCrawlApi',
+						{
+							method: 'GET',
+							url: `${baseUrl}/api/pages`,
+							qs: { workspace_id: workspaceId },
+							headers: API_CLIENT_HEADER,
+							json: true,
+						},
 					);
-				}
 
-				return { results };
+					const pages = response.data || response;
+
+					let results = pages.map((page: any) => ({
+						name: page.name || page.url,
+						value: page.slug,
+						url: `https://pagecrawl.io/app/pages/${page.slug}`,
+					}));
+
+					// Filter results if search term provided
+					if (filter) {
+						const filterLower = filter.toLowerCase();
+						results = results.filter(
+							(page: any) =>
+								page.name.toLowerCase().includes(filterLower) ||
+								page.value.toLowerCase().includes(filterLower),
+						);
+					}
+
+					return { results };
+				} catch {
+					return { results: [] };
+				}
 			},
 		},
 	};

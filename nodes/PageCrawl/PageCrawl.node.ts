@@ -136,6 +136,7 @@ export class PageCrawl implements INodeType {
 						{ name: 'Toronto, CA', value: 'tor1' },
 						{ name: 'New York, US', value: 'ny1' },
 						{ name: 'Frankfurt, DE', value: 'fra1' },
+						{ name: 'Tel Aviv, IL', value: 'tel1' },
 					];
 				} catch (error) {
 					// Return default locations if API call fails
@@ -145,6 +146,7 @@ export class PageCrawl implements INodeType {
 						{ name: 'Toronto, CA', value: 'tor1' },
 						{ name: 'New York, US', value: 'ny1' },
 						{ name: 'Frankfurt, DE', value: 'fra1' },
+						{ name: 'Tel Aviv, IL', value: 'tel1' },
 					];
 				}
 			},
@@ -295,37 +297,41 @@ export class PageCrawl implements INodeType {
 					return { results: [] };
 				}
 
-				const response = await this.helpers.httpRequestWithAuthentication.call(
-					this,
-					'pageCrawlApi',
-					{
-						method: 'GET',
-						url: `${baseUrl}/api/pages`,
-						qs: { workspace_id: workspaceId },
-						headers: API_CLIENT_HEADER,
-						json: true,
-					},
-				);
-
-				const pages = response.data || response;
-
-				let results = pages.map((page: any) => ({
-					name: page.name || page.url,
-					value: page.slug,
-					url: `https://pagecrawl.io/app/pages/${page.slug}`,
-				}));
-
-				// Filter results if search term provided
-				if (filter) {
-					const filterLower = filter.toLowerCase();
-					results = results.filter(
-						(page: any) =>
-							page.name.toLowerCase().includes(filterLower) ||
-							page.value.toLowerCase().includes(filterLower),
+				try {
+					const response = await this.helpers.httpRequestWithAuthentication.call(
+						this,
+						'pageCrawlApi',
+						{
+							method: 'GET',
+							url: `${baseUrl}/api/pages`,
+							qs: { workspace_id: workspaceId },
+							headers: API_CLIENT_HEADER,
+							json: true,
+						},
 					);
-				}
 
-				return { results };
+					const pages = response.data || response;
+
+					let results = pages.map((page: any) => ({
+						name: page.name || page.url,
+						value: page.slug,
+						url: `https://pagecrawl.io/app/pages/${page.slug}`,
+					}));
+
+					// Filter results if search term provided
+					if (filter) {
+						const filterLower = filter.toLowerCase();
+						results = results.filter(
+							(page: any) =>
+								page.name.toLowerCase().includes(filterLower) ||
+								page.value.toLowerCase().includes(filterLower),
+						);
+					}
+
+					return { results };
+				} catch {
+					return { results: [] };
+				}
 			},
 
 			async templateSearch(
@@ -605,6 +611,7 @@ export class PageCrawl implements INodeType {
 					} else if (operation === 'createSimple') {
 						const url = this.getNodeParameter('url', i) as string;
 						const name = this.getNodeParameter('name', i, '') as string;
+						const trackingType = this.getNodeParameter('trackingType', i, 'fullpage') as string;
 						const workspaceId = getWorkspaceId(i);
 						const additionalFields = this.getNodeParameter('additionalFields', i) as any;
 						const body: any = { url, workspace_id: workspaceId };
@@ -612,9 +619,20 @@ export class PageCrawl implements INodeType {
 						if (name) {
 							body.name = name;
 						}
-						if (additionalFields.selector) {
-							body.selector = additionalFields.selector;
+
+						if (trackingType === 'fullpage') {
+							const fullpageMode = this.getNodeParameter('fullpageMode', i, '*') as string;
+							body.selector = fullpageMode;
+						} else if (trackingType === 'text' || trackingType === 'number') {
+							const selector = this.getNodeParameter('selector', i, '') as string;
+							if (selector) {
+								body.selector = selector;
+							}
+							body.type = trackingType;
+						} else {
+							body.type = trackingType;
 						}
+
 						if (additionalFields.frequency !== undefined) {
 							body.frequency = additionalFields.frequency;
 						}
@@ -635,7 +653,7 @@ export class PageCrawl implements INodeType {
 						);
 					} else if (operation === 'create') {
 						const url = this.getNodeParameter('url', i) as string;
-						const name = this.getNodeParameter('name', i) as string;
+						const name = this.getNodeParameter('name', i, '') as string;
 						const frequency = this.getNodeParameter('frequency', i) as number;
 						const elements = this.getNodeParameter('elements', i) as any;
 						const actions = this.getNodeParameter('actions', i, {}) as any;
@@ -839,7 +857,7 @@ export class PageCrawl implements INodeType {
 						const pageId = getPageId(i);
 						const workspaceId = getWorkspaceId(i);
 
-						responseData = await this.helpers.httpRequestWithAuthentication.call(
+						await this.helpers.httpRequestWithAuthentication.call(
 							this,
 							'pageCrawlApi',
 							{
@@ -862,7 +880,7 @@ export class PageCrawl implements INodeType {
 							qs.skip_first_notification = 1;
 						}
 
-						responseData = await this.helpers.httpRequestWithAuthentication.call(
+						await this.helpers.httpRequestWithAuthentication.call(
 							this,
 							'pageCrawlApi',
 							{

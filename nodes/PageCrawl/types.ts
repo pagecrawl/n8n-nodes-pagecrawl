@@ -116,6 +116,7 @@ export const LOCATIONS = [
 	{ value: 'tor1', label: 'Toronto, CA' },
 	{ value: 'ny1', label: 'New York, US' },
 	{ value: 'fra1', label: 'Frankfurt, DE' },
+	{ value: 'tel1', label: 'Tel Aviv, IL' },
 ];
 
 export const NOTIFICATION_CHANNELS = [
