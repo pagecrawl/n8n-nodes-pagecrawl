@@ -6,12 +6,12 @@
 	"resources": {
 		"credentialDocumentation": [
 			{
-				"url": "https://pagecrawl.io/docs/api"
+				"url": "https://pagecrawl.io/developers"
 			}
 		],
 		"primaryDocumentation": [
 			{
-				"url": "https://pagecrawl.io/docs"
+				"url": "https://pagecrawl.io/developers"
 			}
 		]
 	},

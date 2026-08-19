@@ -8,7 +8,7 @@ import {
 export class PageCrawlApi implements ICredentialType {
 	name = 'pageCrawlApi';
 	displayName = 'PageCrawl.io API';
-	documentationUrl = 'https://pagecrawl.io/docs/api';
+	documentationUrl = 'https://pagecrawl.io/developers';
 	properties: INodeProperties[] = [
 		{
 			displayName: 'API Token',
@@ -19,7 +19,7 @@ export class PageCrawlApi implements ICredentialType {
 			},
 			default: '',
 			required: true,
-			description: 'Your PageCrawl.io API token. API access requires a paid plan. Find your token at Settings > API.',
+			description: 'Your PageCrawl.io API token, available on every plan. Create one at Settings > API.',
 		},
 	];
 

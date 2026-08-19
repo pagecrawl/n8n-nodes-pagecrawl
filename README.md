@@ -14,13 +14,12 @@ You can install this node directly in n8n:
 
 To use this node, you'll need a PageCrawl.io API token.
 
-> **Note:** API access requires a paid PageCrawl.io plan. Free accounts do not have API access.
+> **Note:** The API is available on every PageCrawl.io plan, including Free.
 
 1. Sign up or log in to [PageCrawl.io](https://pagecrawl.io)
-2. Upgrade to a paid plan if you haven't already
-3. Go to **Settings > API**
-4. Copy your API token
-5. In n8n, create new PageCrawl credentials and paste your token
+2. Go to **Settings > API**
+3. Create an API token and copy it
+4. In n8n, create new PageCrawl credentials and paste your token
 
 ## Available Nodes
 
@@ -29,7 +28,6 @@ To use this node, you'll need a PageCrawl.io API token.
 The main node for interacting with PageCrawl.io API, supporting the following resources:
 
 #### Page Operations
-- **List All Pages** - Get all tracked pages
 - **Get Page** - Get specific page configuration
 - **Create Page** - Create new tracked page with full configuration
 - **Create Simple Page** - Quick page creation with minimal options
@@ -49,12 +47,8 @@ The main node for interacting with PageCrawl.io API, supporting the following re
 - **Get Check Screenshot** - Screenshot for specific check
 - **Get Check Screenshot Diff** - Visual diff for specific check
 
-#### Webhook Operations
-- **List Webhooks** - Get all configured webhooks
-- **Create Webhook** - Set up a new webhook
-- **Update Webhook** - Modify webhook configuration
-- **Delete Webhook** - Remove a webhook
-- **Test Webhook** - Send test notification
+Webhooks are managed by the PageCrawl Trigger node, which registers and removes
+its own webhook automatically. The main node has no webhook resource.
 
 ### PageCrawl Trigger Node
 
@@ -143,8 +137,8 @@ The node includes comprehensive error handling:
 
 ## Support
 
-- **Documentation**: [PageCrawl.io Docs](https://pagecrawl.io/docs)
-- **API Reference**: [API Documentation](https://pagecrawl.io/docs/api)
+- **Documentation**: [PageCrawl.io Docs](https://pagecrawl.io/developers)
+- **API Reference**: [API Documentation](https://pagecrawl.io/developers)
 - **Issues**: [GitHub Issues](https://github.com/pagecrawl/n8n-nodes-pagecrawl/issues)
 - **Support**: support@pagecrawl.io
 

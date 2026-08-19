@@ -17,7 +17,7 @@ describe('PageCrawlApi Credentials', () => {
 		});
 
 		it('should have documentation URL', () => {
-			expect(credentials.documentationUrl).toBe('https://pagecrawl.io/docs/api');
+			expect(credentials.documentationUrl).toBe('https://pagecrawl.io/developers');
 		});
 	});
 
