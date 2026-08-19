@@ -16,6 +16,23 @@ import { version } from '../../package.json';
 
 const API_CLIENT_HEADER = { 'X-Api-Client': `n8n/${version}` };
 
+// The "Full Page Mode" choices read like selectors in the UI, but the API
+// expresses them as distinct tracking modes.
+const FULLPAGE_TRACKING_MODES: Record<string, string> = {
+	'*': 'fullpage',
+	content: 'content_only',
+	article: 'reader',
+};
+
+/** Unwrap a resourceLocator ({ mode, value }) to its plain id, or '' if unset. */
+function resolveLocatorValue(raw: unknown): string {
+	if (raw && typeof raw === 'object') {
+		const value = (raw as IDataObject).value;
+		return value ? String(value) : '';
+	}
+	return raw ? String(raw) : '';
+}
+
 export class PageCrawl implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'PageCrawl',
@@ -614,23 +631,32 @@ export class PageCrawl implements INodeType {
 						const trackingType = this.getNodeParameter('trackingType', i, 'fullpage') as string;
 						const workspaceId = getWorkspaceId(i);
 						const additionalFields = this.getNodeParameter('additionalFields', i) as any;
-						const body: any = { url, workspace_id: workspaceId };
+						const body: any = { url };
 
 						if (name) {
 							body.name = name;
 						}
 
+						// track-simple is driven by tracking_mode. It has no `type` input,
+						// and full-page selectors are resolved server-side.
 						if (trackingType === 'fullpage') {
 							const fullpageMode = this.getNodeParameter('fullpageMode', i, '*') as string;
-							body.selector = fullpageMode;
+							body.tracking_mode = FULLPAGE_TRACKING_MODES[fullpageMode] ?? 'fullpage';
 						} else if (trackingType === 'text' || trackingType === 'number') {
 							const selector = this.getNodeParameter('selector', i, '') as string;
-							if (selector) {
-								body.selector = selector;
+							if (!selector) {
+								throw new NodeOperationError(
+									this.getNode(),
+									`A CSS or XPath selector is required when tracking a ${
+										trackingType === 'text' ? 'selected area' : 'number'
+									}`,
+									{ itemIndex: i },
+								);
 							}
-							body.type = trackingType;
+							body.selector = selector;
+							body.tracking_mode = trackingType === 'text' ? 'specific_text' : 'specific_number';
 						} else {
-							body.type = trackingType;
+							body.tracking_mode = trackingType;
 						}
 
 						if (additionalFields.frequency !== undefined) {
@@ -639,6 +665,14 @@ export class PageCrawl implements INodeType {
 						if (additionalFields.ignore_duplicates !== undefined) {
 							body.ignore_duplicates = additionalFields.ignore_duplicates;
 						}
+						const simpleFolderId = resolveLocatorValue(additionalFields.folder_id);
+						if (simpleFolderId) {
+							body.folder_id = simpleFolderId;
+						}
+						const simpleTemplateId = resolveLocatorValue(additionalFields.template_id);
+						if (simpleTemplateId) {
+							body.template_id = simpleTemplateId;
+						}
 
 						responseData = await this.helpers.httpRequestWithAuthentication.call(
 							this,
@@ -646,6 +680,9 @@ export class PageCrawl implements INodeType {
 							{
 								method: 'POST',
 								url: `${baseUrl}/api/track-simple`,
+								// SetTeamAndWorkspace reads the workspace override from the query
+								// string only; a body value is ignored.
+								qs: { workspace_id: workspaceId },
 								body,
 								headers: API_CLIENT_HEADER,
 								json: true,
@@ -713,11 +750,10 @@ export class PageCrawl implements INodeType {
 						if (!body.folder_id || body.folder_id === 0) delete body.folder_id;
 						if (!body.template_id || body.template_id === 0) delete body.template_id;
 						if (!body.auth_id || body.auth_id === 0) delete body.auth_id;
-
-						// Use selected workspace
-						if (!body.workspace_id) {
-							body.workspace_id = getWorkspaceId(i);
-						}
+						// The workspace override is a query param (SetTeamAndWorkspace); a
+						// body value is silently ignored, so it is applied to qs below.
+						const createWorkspaceId = getWorkspaceId(i);
+						delete body.workspace_id;
 
 						// Transform fixedCollection fields to arrays
 						if (body.actions && typeof body.actions === 'object') {
@@ -759,6 +795,7 @@ export class PageCrawl implements INodeType {
 							{
 								method: 'POST',
 								url: `${baseUrl}/api/pages`,
+								qs: { workspace_id: createWorkspaceId },
 								body,
 								headers: API_CLIENT_HEADER,
 								json: true,

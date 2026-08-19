@@ -372,3 +372,111 @@ describe('PageCrawl Node Additional Fields', () => {
 		});
 	});
 });
+describe('PageCrawl simple create request building', () => {
+	let node: PageCrawl;
+	let mockExecuteFunctions: jest.Mocked<IExecuteFunctions>;
+	let request: jest.Mock;
+
+	/** Resolve node parameters by name so the tests do not depend on read order. */
+	const withParams = (params: Record<string, unknown>) => {
+		mockExecuteFunctions.getNodeParameter = jest
+			.fn()
+			.mockImplementation((name: string, _i: number, fallback?: unknown) =>
+				name in params ? params[name] : fallback,
+			) as never;
+	};
+
+	const sentOptions = () => request.mock.calls[0][2] as Record<string, any>;
+
+	beforeEach(() => {
+		node = new PageCrawl();
+		request = jest.fn().mockResolvedValue({ id: 1 });
+		mockExecuteFunctions = {
+			getInputData: jest.fn().mockReturnValue([{ json: {} }]),
+			getCredentials: jest.fn().mockResolvedValue({
+				apiToken: 'test-token',
+				baseUrl: 'https://pagecrawl.io',
+			}),
+			getNodeParameter: jest.fn(),
+			getNode: jest.fn().mockReturnValue({ name: 'PageCrawl' }),
+			continueOnFail: jest.fn().mockReturnValue(false),
+			helpers: {
+				httpRequestWithAuthentication: { call: request },
+				prepareBinaryData: jest.fn(),
+				constructExecutionMetaData: jest.fn().mockImplementation((items) => items),
+			},
+		} as unknown as jest.Mocked<IExecuteFunctions>;
+	});
+
+	const base = {
+		resource: 'page',
+		operation: 'createSimple',
+		url: 'https://example.com/widget',
+		name: 'Widget',
+		workspace: { mode: 'id', value: '456' },
+		additionalFields: {},
+	};
+
+	it('sends tracking_mode, which is what track-simple actually reads', async () => {
+		withParams({ ...base, trackingType: 'price' });
+		await node.execute.bind(mockExecuteFunctions)();
+
+		const body = sentOptions().body;
+		// `type` is not an input on /api/track-simple; sending it silently
+		// produced a plain full-page monitor.
+		expect(body.type).toBeUndefined();
+		expect(body.tracking_mode).toBe('price');
+	});
+
+	it('maps the full page modes onto their tracking modes', async () => {
+		const cases: Array<[string, string]> = [
+			['*', 'fullpage'],
+			['content', 'content_only'],
+			['article', 'reader'],
+		];
+		for (const [mode, expected] of cases) {
+			request.mockClear();
+			withParams({ ...base, trackingType: 'fullpage', fullpageMode: mode });
+			await node.execute.bind(mockExecuteFunctions)();
+			expect(sentOptions().body.tracking_mode).toBe(expected);
+		}
+	});
+
+	it('maps selector-based tracking onto the specific_* modes', async () => {
+		withParams({ ...base, trackingType: 'text', selector: '.price' });
+		await node.execute.bind(mockExecuteFunctions)();
+		expect(sentOptions().body).toMatchObject({
+			tracking_mode: 'specific_text',
+			selector: '.price',
+		});
+	});
+
+	it('fails loudly when a selector-based mode has no selector', async () => {
+		withParams({ ...base, trackingType: 'number', selector: '' });
+		await expect(node.execute.bind(mockExecuteFunctions)()).rejects.toThrow(/selector is required/i);
+	});
+
+	it('sends the workspace as a query param, not in the body', async () => {
+		withParams({ ...base, trackingType: 'price' });
+		await node.execute.bind(mockExecuteFunctions)();
+
+		const options = sentOptions();
+		// SetTeamAndWorkspace only reads the query string.
+		expect(options.qs).toEqual({ workspace_id: '456' });
+		expect(options.body.workspace_id).toBeUndefined();
+	});
+
+	it('forwards the folder and template it offers in the UI', async () => {
+		withParams({
+			...base,
+			trackingType: 'price',
+			additionalFields: {
+				folder_id: { mode: 'list', value: '12' },
+				template_id: { mode: 'list', value: '34' },
+			},
+		});
+		await node.execute.bind(mockExecuteFunctions)();
+
+		expect(sentOptions().body).toMatchObject({ folder_id: '12', template_id: '34' });
+	});
+});
