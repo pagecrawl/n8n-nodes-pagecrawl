@@ -1,6 +1,6 @@
 {
   "name": "@pagecrawl/n8n-nodes-pagecrawl",
-  "version": "0.3.9",
+  "version": "0.4.0",
   "description": "n8n node for PageCrawl.io - Website monitoring and change detection",
   "keywords": [
     "n8n",
@@ -27,6 +27,7 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc && cp nodes/PageCrawl/pagecrawl.svg dist/nodes/PageCrawl/ && cp nodes/PageCrawlTrigger/pagecrawl.svg dist/nodes/PageCrawlTrigger/",
+    "prepublishOnly": "npm run build && npm test",
     "dev": "npm run build && npx n8n start",
     "dev:build": "npm run build",
     "n8n:start": "npx n8n start",

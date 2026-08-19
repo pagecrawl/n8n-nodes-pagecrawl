@@ -100,7 +100,7 @@ Store all detected changes in a database for analysis and reporting.
 
 - **URL**: The webpage to monitor
 - **Elements**: Specific page elements to track (CSS/XPath selectors)
-- **Frequency**: How often to check (3 minutes to weekly)
+- **Frequency**: How often to check (2 minutes to monthly, depending on plan)
 - **Location**: Server location for checks (US, UK, CA, DE)
 - **Authentication**: HTTP Basic auth support
 - **Actions**: Pre-check actions (scroll, click, wait, etc.)
