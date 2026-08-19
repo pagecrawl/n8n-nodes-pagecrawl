@@ -480,3 +480,58 @@ describe('PageCrawl simple create request building', () => {
 		expect(sentOptions().body).toMatchObject({ folder_id: '12', template_id: '34' });
 	});
 });
+
+describe('PageCrawl option loaders', () => {
+	const node = new PageCrawl();
+
+	/** A loadOptions context whose /api/user call fails, exercising the fallbacks. */
+	const failingContext = () =>
+		({
+			helpers: {
+				httpRequestWithAuthentication: {
+					call: jest.fn().mockRejectedValue(new Error('offline')),
+				},
+			},
+			getNodeParameter: jest.fn().mockReturnValue({}),
+		}) as never;
+
+	it('offers only frequencies the API accepts', async () => {
+		const options = await (node as any).methods.loadOptions.getFrequencies.call(
+			failingContext(),
+		);
+		const values = options.map((o: any) => o.value);
+
+		// The shortest interval the app allows is 2 minutes.
+		expect(values).not.toContain(1);
+		expect(Math.min(...values)).toBe(2);
+		// The long tail, up to monthly, used to be missing entirely.
+		expect(values).toEqual(expect.arrayContaining([5760, 10080, 20160, 40320]));
+	});
+
+	it('falls back to device values the API accepts', async () => {
+		const options = await (node as any).methods.loadOptions.getDevices.call(
+			failingContext(),
+		);
+		// Desktop is the empty string; 'desktop'/'mobile'/'tablet' are rejected.
+		expect(options.map((o: any) => o.value)).toEqual(['']);
+	});
+
+	it('reads the location allow-list from the proxies key', async () => {
+		const context = {
+			helpers: {
+				httpRequestWithAuthentication: {
+					call: jest.fn().mockResolvedValue({ proxies: ['auto', 'lon1', 'pool:12'] }),
+				},
+			},
+			getNodeParameter: jest.fn().mockReturnValue({}),
+		} as never;
+
+		const options = await (node as any).methods.loadOptions.getLocations.call(context);
+		expect(options).toEqual([
+			{ name: 'Automatic', value: 'auto' },
+			{ name: 'London, UK', value: 'lon1' },
+			// Unknown slugs (custom team pools) still pass through as selectable.
+			{ name: 'pool:12', value: 'pool:12' },
+		]);
+	});
+});

@@ -135,6 +135,7 @@ export const WEBHOOK_PAYLOAD_FIELDS: { value: string; description: string }[] = 
 	{ value: 'content_type', description: 'Document content type (e.g., text/html, text/css, application/json)' },
 	{ value: 'visual_diff', description: 'Visual difference percentage between current and previous screenshots (0-100)' },
 	{ value: 'changed_at', description: 'ISO 8601 timestamp when the change was detected' },
+	{ value: 'original', description: 'Raw text before number extraction (price, number, rating and reviews elements only)' },
 	{ value: 'contents', description: 'Current content of tracked elements or full page text' },
 	{ value: 'difference', description: 'Numerical difference value (e.g., price change percentage, text difference)' },
 	{ value: 'human_difference', description: 'Human-readable description of the change (e.g., "+5.2% increased")' },

@@ -18,6 +18,39 @@ const API_CLIENT_HEADER = { 'X-Api-Client': `n8n/${version}` };
 
 // The "Full Page Mode" choices read like selectors in the UI, but the API
 // expresses them as distinct tracking modes.
+// Used when /api/user cannot be read; every value is accepted by the API.
+const DEFAULT_LOCATIONS = [
+	{ name: 'Automatic', value: 'auto' },
+	{ name: 'Automatic (Europe)', value: 'auto_eu' },
+	{ name: 'United States', value: 'us_dc1' },
+	{ name: 'Germany', value: 'de_dc1' },
+	{ name: 'United Kingdom', value: 'gb_dc1' },
+	{ name: 'London, UK', value: 'lon1' },
+	{ name: 'New York, US', value: 'ny1' },
+	{ name: 'Frankfurt, Germany', value: 'fra1' },
+];
+
+// Human labels for the location slugs /api/user returns.
+const LOCATION_LABELS: Record<string, string> = {
+	auto: 'Automatic',
+	auto_eu: 'Automatic (Europe)',
+	us_dc1: 'United States',
+	de_dc1: 'Germany',
+	gb_dc1: 'United Kingdom',
+	ca_dc1: 'Canada',
+	sg_dc1: 'Singapore',
+	au_dc1: 'Australia',
+	fixed1: 'Fixed IP',
+	lon1: 'London, UK',
+	fra1: 'Frankfurt, Germany',
+	tel1: 'Tel Aviv, Israel',
+	ny1: 'New York, US',
+	sfo3: 'San Francisco, US',
+	tor1: 'Toronto, Canada',
+	random1: 'Random',
+	random2: 'Random (alternate)',
+};
+
 const FULLPAGE_TRACKING_MODES: Record<string, string> = {
 	'*': 'fullpage',
 	content: 'content_only',
@@ -137,34 +170,21 @@ export class PageCrawl implements INodeType {
 						},
 					);
 
-					// Get available locations from user account
-					const locations = response.locations || [];
+					// /api/user exposes the allow-list as `proxies`, a flat list of
+					// slugs (custom team pools arrive as "pool:<id>").
+					const locations = response.proxies || [];
 					if (Array.isArray(locations) && locations.length > 0) {
-						return locations.map((loc: any) => ({
-							name: loc.name || loc.value,
-							value: loc.value,
-						}));
+						return locations.map((loc: any) => {
+							const value = typeof loc === 'string' ? loc : loc.value;
+							return { name: LOCATION_LABELS[value] ?? value, value };
+						});
 					}
 
 					// Fallback to default locations
-					return [
-						{ name: 'Random Proxy', value: 'random1' },
-						{ name: 'London, UK', value: 'lon1' },
-						{ name: 'Toronto, CA', value: 'tor1' },
-						{ name: 'New York, US', value: 'ny1' },
-						{ name: 'Frankfurt, DE', value: 'fra1' },
-						{ name: 'Tel Aviv, IL', value: 'tel1' },
-					];
+					return DEFAULT_LOCATIONS;
 				} catch (error) {
 					// Return default locations if API call fails
-					return [
-						{ name: 'Random Proxy', value: 'random1' },
-						{ name: 'London, UK', value: 'lon1' },
-						{ name: 'Toronto, CA', value: 'tor1' },
-						{ name: 'New York, US', value: 'ny1' },
-						{ name: 'Frankfurt, DE', value: 'fra1' },
-						{ name: 'Tel Aviv, IL', value: 'tel1' },
-					];
+					return DEFAULT_LOCATIONS;
 				}
 			},
 			async getFrequencies(this: ILoadOptionsFunctions) {
@@ -172,7 +192,6 @@ export class PageCrawl implements INodeType {
 
 				// All frequency options (Daily is 1440, used as default)
 				const allFrequencies = [
-					{ name: 'Every 1 Minute', value: 1 },
 					{ name: 'Every 2 Minutes', value: 2 },
 					{ name: 'Every 3 Minutes', value: 3 },
 					{ name: 'Every 5 Minutes', value: 5 },
@@ -187,7 +206,14 @@ export class PageCrawl implements INodeType {
 					{ name: 'Daily', value: 1440 },
 					{ name: 'Every 2 Days', value: 2880 },
 					{ name: 'Every 3 Days', value: 4320 },
+					{ name: 'Every 4 Days', value: 5760 },
+					{ name: 'Every 5 Days', value: 7200 },
+					{ name: 'Every 6 Days', value: 8640 },
 					{ name: 'Weekly', value: 10080 },
+					{ name: 'Every 10 Days', value: 14400 },
+					{ name: 'Every 2 Weeks', value: 20160 },
+					{ name: 'Every 3 Weeks', value: 30240 },
+					{ name: 'Monthly', value: 40320 },
 					{ name: 'Every 2 weeks', value: 20160 },
 					{ name: 'Monthly', value: 40320 },
 				];
@@ -242,18 +268,14 @@ export class PageCrawl implements INodeType {
 					}
 
 					// Fallback to default devices
-					return [
-						{ name: 'Desktop (1920x1080)', value: 'desktop' },
-						{ name: 'Mobile (375x667)', value: 'mobile' },
-						{ name: 'Tablet (768x1024)', value: 'tablet' },
-					];
+					// Desktop is the empty string server-side and every other valid
+					// value is a named device, so 'mobile'/'tablet' would 422.
+					return [{ name: 'Desktop (1920x1080)', value: '' }];
 				} catch (error) {
 					// Return default devices if API call fails
-					return [
-						{ name: 'Desktop (1920x1080)', value: 'desktop' },
-						{ name: 'Mobile (375x667)', value: 'mobile' },
-						{ name: 'Tablet (768x1024)', value: 'tablet' },
-					];
+					// Desktop is the empty string server-side and every other valid
+					// value is a named device, so 'mobile'/'tablet' would 422.
+					return [{ name: 'Desktop (1920x1080)', value: '' }];
 				}
 			},
 			async getAIModels(this: ILoadOptionsFunctions) {
@@ -525,7 +547,7 @@ export class PageCrawl implements INodeType {
 						'pageCrawlApi',
 						{
 							method: 'GET',
-							url: `${baseUrl}/api/auths`,
+							url: `${baseUrl}/api/authentications`,
 							qs: { workspace_id: workspaceId },
 							headers: API_CLIENT_HEADER,
 							json: true,

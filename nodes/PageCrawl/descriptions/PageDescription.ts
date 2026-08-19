@@ -534,8 +534,10 @@ export const pageFields: INodeProperties[] = [
 						displayName: 'Label',
 						name: 'label',
 						type: 'string',
-						default: '',
-						description: 'Short label for the element',
+						required: true,
+						default: 'Tracked value',
+						description:
+							'Short label for the element. The API requires one for most element types, including text, price, number and fullpage.',
 					},
 					{
 						displayName: 'Threshold',
