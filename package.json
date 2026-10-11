@@ -31,8 +31,8 @@
     "dev": "npm run build && npx n8n start",
     "dev:build": "npm run build",
     "n8n:start": "npx n8n start",
-    "lint": "eslint nodes credentials --ext .ts",
-    "lint:fix": "eslint nodes credentials --ext .ts --fix",
+    "lint": "eslint nodes credentials",
+    "lint:fix": "eslint nodes credentials --fix",
     "link": "npm run build && npm link",
     "test": "jest --testPathIgnorePatterns=integration",
     "test:integration": "jest --testPathPattern=integration --testTimeout=60000"

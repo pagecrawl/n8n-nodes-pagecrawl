@@ -248,6 +248,7 @@ describeIfCredentials('PageCrawl Node Integration Tests', () => {
 			const context = createExecutionContext({
 				resource: 'page',
 				operation: 'get',
+				workspace: { mode: 'id', value: workspaceId },
 				pageId: { mode: 'id', value: String(testPageId) },
 				options: {},
 			});
@@ -268,6 +269,7 @@ describeIfCredentials('PageCrawl Node Integration Tests', () => {
 			const context = createExecutionContext({
 				resource: 'page',
 				operation: 'get',
+				workspace: { mode: 'id', value: workspaceId },
 				pageId: { mode: 'slug', value: testPageSlug },
 				options: {},
 			});
@@ -311,6 +313,7 @@ describeIfCredentials('PageCrawl Node Integration Tests', () => {
 			const context = createExecutionContext({
 				resource: 'page',
 				operation: 'update',
+				workspace: { mode: 'id', value: workspaceId },
 				pageId: { mode: 'id', value: String(testPageId) },
 				updateFields: {
 					name: newName,
@@ -329,6 +332,7 @@ describeIfCredentials('PageCrawl Node Integration Tests', () => {
 			const context = createExecutionContext({
 				resource: 'page',
 				operation: 'update',
+				workspace: { mode: 'id', value: workspaceId },
 				pageId: { mode: 'id', value: String(testPageId) },
 				updateFields: {
 					frequency: 60,
@@ -368,6 +372,7 @@ describeIfCredentials('PageCrawl Node Integration Tests', () => {
 			const context = createExecutionContext({
 				resource: 'page',
 				operation: 'delete',
+				workspace: { mode: 'id', value: workspaceId },
 				pageId: { mode: 'id', value: String(pageId) },
 			});
 
@@ -415,6 +420,7 @@ describeIfCredentials('PageCrawl Node Integration Tests', () => {
 			const context = createExecutionContext({
 				resource: 'page',
 				operation: 'runCheckNow',
+				workspace: { mode: 'id', value: workspaceId },
 				pageId: { mode: 'id', value: String(testPageId) },
 				runCheckOptions: {},
 			});
