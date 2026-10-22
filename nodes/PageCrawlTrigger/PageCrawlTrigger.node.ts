@@ -10,6 +10,7 @@ import {
 } from 'n8n-workflow';
 
 import { WEBHOOK_PAYLOAD_FIELDS } from '../PageCrawl/types';
+import { verifySignature } from './signature';
 import { version } from '../../package.json';
 
 const API_CLIENT_HEADER = { 'X-Api-Client': `n8n/${version}` };
@@ -295,6 +296,11 @@ export class PageCrawlTrigger implements INodeType {
 						return false;
 					}
 
+					// Workflows activated before deliveries were verified have no stored secret yet.
+					if (typeof existingWebhook.signing_secret === 'string') {
+						webhookData.signingSecret = existingWebhook.signing_secret;
+					}
+
 					return true;
 				} catch (error) {
 					return false;
@@ -366,6 +372,10 @@ export class PageCrawlTrigger implements INodeType {
 					}
 
 					webhookData.webhookId = response.id;
+					// Every delivery is signed with this secret; webhook() refuses any that is not.
+					if (typeof response.signing_secret === 'string') {
+						webhookData.signingSecret = response.signing_secret;
+					}
 
 					// Send test event if enabled
 					if (sendTestOnListen) {
@@ -421,6 +431,7 @@ export class PageCrawlTrigger implements INodeType {
 				} finally {
 					// Always clean up the webhook ID, even if deletion failed
 					delete webhookData.webhookId;
+					delete webhookData.signingSecret;
 				}
 
 				return true;
@@ -430,6 +441,16 @@ export class PageCrawlTrigger implements INodeType {
 
 	async webhook(this: IWebhookFunctions): Promise<IWebhookResponseData> {
 		const req = this.getRequestObject();
+
+		// Anyone who learns this workflow's webhook URL could post to it, so only deliveries
+		// signed with this webhook's secret start the workflow.
+		const secret = await signingSecret.call(this);
+		const headers = this.getHeaderData() as IDataObject;
+		const rawBody = (req as unknown as { rawBody?: Buffer }).rawBody ?? JSON.stringify(req.body ?? {});
+		if (!secret || !verifySignature(secret, rawBody, headers['x-pagecrawl-signature'], headers['x-pagecrawl-timestamp'])) {
+			this.getResponseObject().status(401).json({ message: 'Invalid or missing PageCrawl signature' });
+			return { noWebhookResponse: true };
+		}
 		const simplifyOutput = this.getNodeParameter('simplifyOutput', true) as boolean;
 		const events = this.getNodeParameter('events', ['change_detected']) as string[];
 
@@ -462,4 +483,36 @@ export class PageCrawlTrigger implements INodeType {
 			workflowData: [this.helpers.returnJsonArray(responseData)],
 		};
 	}
+}
+
+/**
+ * The webhook's signing secret, from the workflow's stored data or, for a workflow activated
+ * before deliveries were verified, from the PageCrawl API (then stored).
+ */
+async function signingSecret(this: IWebhookFunctions): Promise<string | undefined> {
+	const webhookData = this.getWorkflowStaticData('node');
+	if (typeof webhookData.signingSecret === 'string' && webhookData.signingSecret) {
+		return webhookData.signingSecret;
+	}
+	if (!webhookData.webhookId) {
+		return undefined;
+	}
+
+	try {
+		const webhook = await this.helpers.httpRequestWithAuthentication.call(this, 'pageCrawlApi', {
+			method: 'GET',
+			url: `https://pagecrawl.io/api/hooks/${webhookData.webhookId}`,
+			headers: API_CLIENT_HEADER,
+			json: true,
+		});
+		const secret = (webhook as IDataObject)?.signing_secret ?? ((webhook as IDataObject)?.data as IDataObject)?.signing_secret;
+		if (typeof secret === 'string' && secret) {
+			webhookData.signingSecret = secret;
+			return secret;
+		}
+	} catch {
+		// Unreachable API: the delivery is refused, and PageCrawl reports it as failed.
+	}
+
+	return undefined;
 }

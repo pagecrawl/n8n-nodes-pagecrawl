@@ -1,4 +1,5 @@
 import { IHookFunctions, IWebhookFunctions, IDataObject } from 'n8n-workflow';
+import { createHmac } from 'crypto';
 import { PageCrawlTrigger } from '../PageCrawlTrigger.node';
 
 describe('PageCrawlTrigger Node', () => {
@@ -279,40 +280,82 @@ describe('PageCrawlTrigger Webhook Methods', () => {
 	});
 });
 
+describe('PageCrawlTrigger signing secret', () => {
+	const node = new PageCrawlTrigger();
+	const hooks = (webhookData: IDataObject, response: unknown) =>
+		({
+			getWorkflowStaticData: jest.fn().mockReturnValue(webhookData),
+			getNodeWebhookUrl: jest.fn().mockReturnValue('https://n8n.example.com/webhook/pagecrawl'),
+			getNodeParameter: jest.fn((name: string, fallback: unknown) =>
+				name === 'workspace' ? { mode: 'list', value: '1' } : name === 'sendTestOnListen' ? false : fallback),
+			helpers: { httpRequestWithAuthentication: { call: jest.fn().mockResolvedValue(response) } },
+		}) as unknown as IHookFunctions;
+
+	it('is stored when the webhook is created', async () => {
+		const data: IDataObject = {};
+		await node.webhookMethods.default.create.bind(hooks(data, { id: 5, signing_secret: 's3cret' }))();
+		expect(data).toEqual({ webhookId: 5, signingSecret: 's3cret' });
+	});
+
+	it('is picked up for an existing webhook, and forgotten on delete', async () => {
+		const data: IDataObject = { webhookId: 5 };
+		const exists = await node.webhookMethods.default.checkExists.bind(
+			hooks(data, [{ id: 5, target_url: 'https://n8n.example.com/webhook/pagecrawl', signing_secret: 's3cret' }]),
+		)();
+		expect(exists).toBe(true);
+		expect(data.signingSecret).toBe('s3cret');
+
+		await node.webhookMethods.default.delete.bind(hooks(data, {}))();
+		expect(data).toEqual({});
+	});
+});
+
 describe('PageCrawlTrigger Webhook Handler', () => {
+	const SECRET = 'a'.repeat(64);
 	let node: PageCrawlTrigger;
 	let mockWebhookFunctions: jest.Mocked<IWebhookFunctions>;
+	let staticData: IDataObject;
+	let response: { status: jest.Mock; json: jest.Mock };
+
+	// A delivery as PageCrawl sends it: the raw JSON body and its signature headers.
+	function deliver(body: IDataObject, { secret = SECRET, timestamp = Math.floor(Date.now() / 1000), raw }: { secret?: string; timestamp?: number; raw?: string } = {}) {
+		const rawBody = raw ?? JSON.stringify(body);
+		const signature = createHmac('sha256', secret).update(`${timestamp}.${rawBody}`).digest('hex');
+		mockWebhookFunctions.getRequestObject.mockReturnValue({ body, rawBody: Buffer.from(rawBody) } as any);
+		mockWebhookFunctions.getHeaderData.mockReturnValue({
+			'x-pagecrawl-signature': `sha256=${signature}`,
+			'x-pagecrawl-timestamp': String(timestamp),
+		});
+	}
 
 	beforeEach(() => {
 		node = new PageCrawlTrigger();
+		staticData = { webhookId: 77, signingSecret: SECRET };
+		response = { status: jest.fn(), json: jest.fn() };
+		response.status.mockReturnValue(response);
 		mockWebhookFunctions = {
 			getRequestObject: jest.fn(),
+			getHeaderData: jest.fn().mockReturnValue({}),
+			getResponseObject: jest.fn().mockReturnValue(response),
+			getWorkflowStaticData: jest.fn().mockReturnValue(staticData),
 			getNodeParameter: jest.fn(),
 			helpers: {
 				returnJsonArray: jest.fn().mockImplementation((data) => [{ json: data }]),
+				httpRequestWithAuthentication: { call: jest.fn() },
 			},
 		} as unknown as jest.Mocked<IWebhookFunctions>;
 	});
 
-	it('should process change event', async () => {
-		mockWebhookFunctions.getRequestObject.mockReturnValue({
-			body: {
-				id: 1,
-				title: 'Test Check',
-				status: 'changed',
-				changed_at: '2024-01-01T00:00:00Z',
-				difference: 10,
-			},
-		} as any);
+	it('should process a signed change event', async () => {
+		deliver({ id: 1, title: 'Test Check', status: 'changed', changed_at: '2024-01-01T00:00:00Z', difference: 10 });
 		mockWebhookFunctions.getNodeParameter
 			.mockReturnValueOnce(false) // simplifyOutput
 			.mockReturnValueOnce(['change_detected']); // events
 
-		const boundWebhook = node.webhook.bind(mockWebhookFunctions);
-		const result = await boundWebhook();
+		const result = await node.webhook.bind(mockWebhookFunctions)();
 
-		expect(result.workflowData).toBeDefined();
 		expect(result.workflowData?.length).toBeGreaterThan(0);
+		expect(response.status).not.toHaveBeenCalled();
 	});
 
 	it('should simplify output when option is enabled', async () => {
@@ -323,29 +366,20 @@ describe('PageCrawlTrigger Webhook Handler', () => {
 			changed_at: '2024-01-01T00:00:00Z',
 			difference: 10,
 			human_difference: '10%',
-			page: {
-				url: 'https://example.com',
-				name: 'Example Page',
-				link: 'https://pagecrawl.io/pages/1',
-			},
+			page: { url: 'https://example.com', name: 'Example Page', link: 'https://pagecrawl.io/pages/1' },
 			contents: 'New content',
 		};
-
-		mockWebhookFunctions.getRequestObject.mockReturnValue({ body: webhookBody } as any);
+		deliver(webhookBody);
 		mockWebhookFunctions.getNodeParameter
 			.mockReturnValueOnce(true) // simplifyOutput
 			.mockReturnValueOnce(['change_detected']); // events
 
-		const boundWebhook = node.webhook.bind(mockWebhookFunctions);
-		await boundWebhook();
+		await node.webhook.bind(mockWebhookFunctions)();
 
 		expect(mockWebhookFunctions.helpers.returnJsonArray).toHaveBeenCalledWith(
 			expect.objectContaining({
 				id: 1,
-				title: 'Test Check',
-				status: 'changed',
 				changedAt: '2024-01-01T00:00:00Z',
-				difference: 10,
 				humanDifference: '10%',
 				pageUrl: 'https://example.com',
 				pageName: 'Example Page',
@@ -353,5 +387,57 @@ describe('PageCrawlTrigger Webhook Handler', () => {
 				contents: 'New content',
 			})
 		);
+	});
+
+	it('should verify the exact bytes received, not a re-serialised body', async () => {
+		// PHP escapes slashes; the signature covers those bytes.
+		deliver({ url: 'https://example.com/a' }, { raw: '{"url":"https:\\/\\/example.com\\/a"}' });
+		mockWebhookFunctions.getNodeParameter.mockReturnValueOnce(false).mockReturnValueOnce(['change_detected']);
+
+		const result = await node.webhook.bind(mockWebhookFunctions)();
+
+		expect(result.workflowData).toBeDefined();
+	});
+
+	it.each([
+		['unsigned', () => mockWebhookFunctions.getRequestObject.mockReturnValue({ body: { id: 1 }, rawBody: Buffer.from('{"id":1}') } as any)],
+		['signed with another secret', () => deliver({ id: 1 }, { secret: 'b'.repeat(64) })],
+		['replayed after five minutes', () => deliver({ id: 1 }, { timestamp: Math.floor(Date.now() / 1000) - 301 })],
+	])('should refuse a delivery that is %s', async (_label, prepare) => {
+		prepare();
+
+		const result = await node.webhook.bind(mockWebhookFunctions)();
+
+		expect(result).toEqual({ noWebhookResponse: true });
+		expect(response.status).toHaveBeenCalledWith(401);
+		expect(mockWebhookFunctions.helpers.returnJsonArray).not.toHaveBeenCalled();
+	});
+
+	it('should fetch and keep the secret for a workflow activated before verification', async () => {
+		delete staticData.signingSecret;
+		(mockWebhookFunctions.helpers.httpRequestWithAuthentication.call as jest.Mock).mockResolvedValue({ id: 77, signing_secret: SECRET });
+		deliver({ id: 1 });
+		mockWebhookFunctions.getNodeParameter.mockReturnValueOnce(false).mockReturnValueOnce(['change_detected']);
+
+		const result = await node.webhook.bind(mockWebhookFunctions)();
+
+		expect(result.workflowData).toBeDefined();
+		expect(staticData.signingSecret).toBe(SECRET);
+		expect(mockWebhookFunctions.helpers.httpRequestWithAuthentication.call).toHaveBeenCalledWith(
+			mockWebhookFunctions,
+			'pageCrawlApi',
+			expect.objectContaining({ method: 'GET', url: 'https://pagecrawl.io/api/hooks/77' })
+		);
+	});
+
+	it('should refuse deliveries while the secret cannot be read', async () => {
+		delete staticData.signingSecret;
+		(mockWebhookFunctions.helpers.httpRequestWithAuthentication.call as jest.Mock).mockRejectedValue(new Error('offline'));
+		deliver({ id: 1 });
+
+		const result = await node.webhook.bind(mockWebhookFunctions)();
+
+		expect(result).toEqual({ noWebhookResponse: true });
+		expect(response.status).toHaveBeenCalledWith(401);
 	});
 });

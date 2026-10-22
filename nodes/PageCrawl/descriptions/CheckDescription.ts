@@ -13,6 +13,12 @@ export const checkOperations: INodeProperties[] = [
 		},
 		options: [
 			{
+				name: 'Get Before and After Image',
+				value: 'getBeforeAfter',
+				description: 'Get the screenshots from before and after the change, side by side',
+				action: 'Get before and after image',
+			},
+			{
 				name: 'Get History',
 				value: 'getHistory',
 				description: 'Get check history for a page',
@@ -29,6 +35,12 @@ export const checkOperations: INodeProperties[] = [
 				value: 'getDiffImage',
 				description: 'Get text difference as image',
 				action: 'Get text diff image',
+			},
+			{
+				name: 'Get Text Diff Patch',
+				value: 'getDiffPatch',
+				description: 'Get text difference as a unified patch',
+				action: 'Get text diff patch',
 			},
 			{
 				name: 'Get Text Diff Markdown',
@@ -138,7 +150,7 @@ export const checkFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				resource: ['check'],
-				operation: ['getDiffHtml', 'getDiffImage', 'getDiffMarkdown'],
+				operation: ['getDiffHtml', 'getDiffImage', 'getDiffMarkdown', 'getDiffPatch', 'getBeforeAfter'],
 			},
 		},
 		default: 'latest',

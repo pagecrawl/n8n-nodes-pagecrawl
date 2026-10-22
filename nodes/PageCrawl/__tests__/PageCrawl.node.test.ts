@@ -1,4 +1,4 @@
-import { IExecuteFunctions } from 'n8n-workflow';
+import { IExecuteFunctions, NodeApiError, NodeOperationError } from 'n8n-workflow';
 import { PageCrawl } from '../PageCrawl.node';
 
 describe('PageCrawl Node', () => {
@@ -208,6 +208,43 @@ describe('PageCrawl Node Operations', () => {
 			expect(result).toBeDefined();
 			expect(result[0][0].json).toHaveProperty('error');
 		});
+
+		const getPage = () =>
+			mockExecuteFunctions.getNodeParameter
+				.mockReturnValueOnce('page')
+				.mockReturnValueOnce('get')
+				.mockReturnValueOnce({ mode: 'slug', value: '123' })
+				.mockReturnValueOnce({ mode: 'id', value: '456' })
+				.mockReturnValueOnce({});
+
+		it('should report an API failure with its status and PageCrawl message', async () => {
+			getPage();
+			mockExecuteFunctions.helpers.httpRequestWithAuthentication.call = jest.fn().mockRejectedValue({
+				message: 'Request failed with status code 404',
+				httpCode: '404',
+				response: { body: { message: 'Page not found in this workspace' } },
+			});
+
+			const error = await node.execute.bind(mockExecuteFunctions)().catch((e: unknown) => e);
+
+			expect(error).toBeInstanceOf(NodeApiError);
+			expect((error as NodeApiError).message).toBe('Page not found in this workspace');
+			expect((error as NodeApiError).httpCode).toBe('404');
+		});
+
+		it('should wrap any other failure for this node', async () => {
+			getPage();
+			mockExecuteFunctions.helpers.httpRequestWithAuthentication.call = jest.fn().mockRejectedValue(new Error('socket hang up'));
+
+			const error = await node.execute.bind(mockExecuteFunctions)().catch((e: unknown) => e);
+
+			expect(error).toBeInstanceOf(NodeOperationError);
+			expect((error as Error).message).toBe('socket hang up');
+		});
+	});
+
+	it('should be usable as a tool by n8n AI agents', () => {
+		expect(node.description.usableAsTool).toBe(true);
 	});
 });
 

@@ -39,6 +39,24 @@ export const pageOperations: INodeProperties[] = [
 				action: 'Get a page',
 			},
 			{
+				name: 'Get Many',
+				value: 'getMany',
+				description: 'Get many tracked pages in the workspace',
+				action: 'Get many pages',
+			},
+			{
+				name: 'Pause',
+				value: 'pause',
+				description: 'Stop checking a page until it is resumed',
+				action: 'Pause a page',
+			},
+			{
+				name: 'Resume',
+				value: 'resume',
+				description: 'Start checking a paused page again',
+				action: 'Resume a page',
+			},
+			{
 				name: 'Update',
 				value: 'update',
 				description: 'Update a tracked page',
@@ -57,6 +75,57 @@ export const pageOperations: INodeProperties[] = [
 
 export const pageFields: INodeProperties[] = [
 	// ========================================
+	// page:getMany
+	// ========================================
+	{
+		displayName: 'Pages',
+		name: 'pageSet',
+		type: 'options',
+		displayOptions: { show: { resource: ['page'], operation: ['getMany'] } },
+		options: [
+			{ name: 'All Active Pages', value: 'active', description: 'Every active page, in folders or not' },
+			{ name: 'Paused Pages', value: 'paused', description: 'Only the paused pages, in every folder' },
+			{ name: 'Pages in a Folder', value: 'folder', description: 'The pages in one folder' },
+		],
+		default: 'active',
+	},
+	{
+		displayName: 'Folder',
+		name: 'folder',
+		type: 'string',
+		required: true,
+		displayOptions: { show: { resource: ['page'], operation: ['getMany'], pageSet: ['folder'] } },
+		default: '',
+		placeholder: 'e.g. Competitors',
+		description: 'The folder name or ID',
+	},
+	{
+		displayName: 'Return All',
+		name: 'returnAll',
+		type: 'boolean',
+		displayOptions: { show: { resource: ['page'], operation: ['getMany'] } },
+		default: false,
+		description: 'Whether to return all results or only up to a given limit',
+	},
+	{
+		displayName: 'Limit',
+		name: 'limit',
+		type: 'number',
+		displayOptions: { show: { resource: ['page'], operation: ['getMany'], returnAll: [false] } },
+		typeOptions: { minValue: 1 },
+		default: 50,
+		description: 'Max number of results to return',
+	},
+	{
+		displayName: 'Include Latest Values',
+		name: 'includeLatest',
+		type: 'boolean',
+		displayOptions: { show: { resource: ['page'], operation: ['getMany'] } },
+		default: true,
+		description: 'Whether to return each page in short form with its newest check, instead of its full configuration',
+	},
+
+	// ========================================
 	// page:get
 	// ========================================
 	{
@@ -67,7 +136,7 @@ export const pageFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				resource: ['page'],
-				operation: ['get', 'update', 'delete', 'runCheckNow'],
+				operation: ['get', 'update', 'delete', 'runCheckNow', 'pause', 'resume'],
 			},
 		},
 		default: { mode: 'list', value: '' },

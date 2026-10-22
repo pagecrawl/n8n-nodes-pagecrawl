@@ -4,6 +4,8 @@ import {
 	INodeType,
 	INodeTypeDescription,
 	NodeOperationError,
+	NodeApiError,
+	JsonObject,
 	ILoadOptionsFunctions,
 	INodeListSearchResult,
 	IDataObject,
@@ -12,6 +14,7 @@ import {
 import { pageOperations, pageFields } from './descriptions/PageDescription';
 import { checkOperations, checkFields } from './descriptions/CheckDescription';
 import { screenshotOperations, screenshotFields } from './descriptions/ScreenshotDescription';
+import { dataSourceOperations, dataSourceFields } from './descriptions/DataSourceDescription';
 import { version } from '../../package.json';
 
 const API_CLIENT_HEADER = { 'X-Api-Client': `n8n/${version}` };
@@ -73,6 +76,8 @@ export class PageCrawl implements INodeType {
 		icon: 'file:pagecrawl.svg',
 		group: ['transform'],
 		version: 1,
+		// Lets n8n AI agents call PageCrawl operations as a tool.
+		usableAsTool: true,
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
 		description: 'Interact with PageCrawl.io API for website monitoring',
 		defaults: {
@@ -116,6 +121,11 @@ export class PageCrawl implements INodeType {
 						value: 'screenshot',
 						description: 'Get page screenshots',
 					},
+					{
+						name: 'Data Source',
+						value: 'dataSource',
+						description: 'Record your own values and get alerts when they change',
+					},
 				],
 				default: 'page',
 			},
@@ -126,6 +136,8 @@ export class PageCrawl implements INodeType {
 				required: true,
 				default: { mode: 'list', value: '' },
 				description: 'Select workspace to use for this operation',
+				// A push goes to the data source's own ingest URL, which already names it.
+				displayOptions: { hide: { resource: ['dataSource'], operation: ['pushValue'] } },
 				modes: [
 					{
 						displayName: 'From List',
@@ -150,6 +162,8 @@ export class PageCrawl implements INodeType {
 			...checkFields,
 			...screenshotOperations,
 			...screenshotFields,
+			...dataSourceOperations,
+			...dataSourceFields,
 		],
 	};
 
@@ -912,6 +926,64 @@ export class PageCrawl implements INodeType {
 								json: true,
 							},
 						);
+					} else if (operation === 'getMany') {
+						const workspaceId = getWorkspaceId(i);
+						const pageSet = this.getNodeParameter('pageSet', i, 'active') as string;
+						const returnAll = this.getNodeParameter('returnAll', i, false) as boolean;
+						const limit = this.getNodeParameter('limit', i, 50) as number;
+						const includeLatest = this.getNodeParameter('includeLatest', i, true) as boolean;
+						const qs: IDataObject = { workspace_id: workspaceId };
+						if (pageSet === 'paused') {
+							qs.disabled = 1;
+						} else if (pageSet === 'folder') {
+							qs.folder = this.getNodeParameter('folder', i) as string;
+						} else {
+							qs.folder = '*';
+						}
+						// With simple, take is checks per page; without it, take caps pages unsorted.
+						if (includeLatest) {
+							qs.simple = 1;
+							qs.take = 1;
+						}
+
+						const response = await this.helpers.httpRequestWithAuthentication.call(
+							this,
+							'pageCrawlApi',
+							{
+								method: 'GET',
+								url: `${baseUrl}/api/pages`,
+								qs,
+								headers: API_CLIENT_HEADER,
+								json: true,
+							},
+						);
+						const pages = (Array.isArray(response) ? response : (response?.data ?? [])) as IDataObject[];
+						const selected = returnAll ? pages : pages.slice(0, limit);
+
+						returnData.push(
+							...this.helpers.constructExecutionMetaData(
+								selected.map((page) => ({ json: page })),
+								{ itemData: { item: i } },
+							),
+						);
+						continue;
+					} else if (operation === 'pause' || operation === 'resume') {
+						const pageId = getPageId(i);
+						const workspaceId = getWorkspaceId(i);
+
+						// Set the state rather than toggle it, so a re-run never flips it back.
+						responseData = await this.helpers.httpRequestWithAuthentication.call(
+							this,
+							'pageCrawlApi',
+							{
+								method: 'PUT',
+								url: `${baseUrl}/api/pages/${pageId}`,
+								qs: { workspace_id: workspaceId },
+								body: { disabled: operation === 'pause' },
+								headers: API_CLIENT_HEADER,
+								json: true,
+							},
+						);
 					} else if (operation === 'delete') {
 						const pageId = getPageId(i);
 						const workspaceId = getWorkspaceId(i);
@@ -1028,6 +1100,50 @@ export class PageCrawl implements INodeType {
 							pageId,
 							checkId,
 						};
+					} else if (operation === 'getDiffPatch') {
+						const checkId = this.getNodeParameter('checkId', i) as string;
+
+						const patch = await this.helpers.httpRequestWithAuthentication.call(
+							this,
+							'pageCrawlApi',
+							{
+								method: 'GET',
+								url: `${baseUrl}/api/pages/${pageId}/checks/${checkId}/diff.patch`,
+								qs: { workspace_id: workspaceId },
+								headers: { ...API_CLIENT_HEADER, Accept: 'text/plain' },
+							},
+						);
+
+						responseData = { patch, pageId, checkId };
+					} else if (operation === 'getBeforeAfter') {
+						const checkId = this.getNodeParameter('checkId', i) as string;
+
+						const image = (await this.helpers.httpRequestWithAuthentication.call(
+							this,
+							'pageCrawlApi',
+							{
+								method: 'GET',
+								url: `${baseUrl}/api/pages/${pageId}/checks/${checkId}/before-after.jpg`,
+								qs: { workspace_id: workspaceId },
+								headers: API_CLIENT_HEADER,
+								encoding: 'arraybuffer',
+							},
+						)) as Buffer;
+						// A PNG placeholder comes back when the check has nothing to compare.
+						const png = Buffer.from(image).subarray(0, 4).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+						const binaryData = await this.helpers.prepareBinaryData(
+							Buffer.from(image),
+							`before-after-${pageId}-${checkId}.${png ? 'png' : 'jpg'}`,
+							png ? 'image/png' : 'image/jpeg',
+						);
+
+						returnData.push(
+							...this.helpers.constructExecutionMetaData(
+								[{ json: { pageId, checkId, placeholder: png }, binary: { data: binaryData } }],
+								{ itemData: { item: i } },
+							),
+						);
+						continue;
 					} else if (operation === 'getDiffMarkdown') {
 						const checkId = this.getNodeParameter('checkId', i) as string;
 
@@ -1050,6 +1166,64 @@ export class PageCrawl implements INodeType {
 							pageId,
 							checkId,
 						};
+					}
+				} else if (resource === 'dataSource') {
+					if (operation === 'create') {
+						const workspaceId = getWorkspaceId(i);
+						const fields = transformFixedCollection(this.getNodeParameter('fields', i, {}), 'field')
+							.filter((field: IDataObject) => String(field.label ?? '').trim() !== '');
+						const body: IDataObject = { name: this.getNodeParameter('name', i) as string };
+						if (fields.length > 0) {
+							body.fields = fields;
+						}
+
+						responseData = await this.helpers.httpRequestWithAuthentication.call(
+							this,
+							'pageCrawlApi',
+							{
+								method: 'POST',
+								url: `${baseUrl}/api/data-sources`,
+								qs: { workspace_id: workspaceId },
+								body,
+								headers: API_CLIENT_HEADER,
+								json: true,
+							},
+						);
+					} else if (operation === 'pushValue') {
+						const ingestUrl = String(this.getNodeParameter('ingestUrl', i)).trim();
+						// The URL is the credential, so only ever send values to PageCrawl itself.
+						if (!/^https:\/\/pagecrawl\.io\/api\/ingest\/[A-Za-z0-9_-]+$/.test(ingestUrl)) {
+							throw new NodeOperationError(
+								this.getNode(),
+								'The ingest URL must look like https://pagecrawl.io/api/ingest/data-...',
+								{ itemIndex: i },
+							);
+						}
+						const valueMode = this.getNodeParameter('valueMode', i, 'single') as string;
+						let body: IDataObject;
+						if (valueMode === 'fields') {
+							const values: IDataObject = {};
+							for (const row of transformFixedCollection(this.getNodeParameter('values', i, {}), 'value')) {
+								const name = String(row.name ?? '').trim();
+								if (name) {
+									values[name] = row.value;
+								}
+							}
+							if (Object.keys(values).length === 0) {
+								throw new NodeOperationError(this.getNode(), 'Add at least one field and value', { itemIndex: i });
+							}
+							body = { values };
+						} else {
+							body = { value: this.getNodeParameter('value', i) as string };
+						}
+
+						responseData = await this.helpers.httpRequest({
+							method: 'POST',
+							url: ingestUrl,
+							body,
+							headers: API_CLIENT_HEADER,
+							json: true,
+						});
 					}
 				} else if (resource === 'screenshot') {
 					const pageId = getPageId(i);
@@ -1124,7 +1298,18 @@ export class PageCrawl implements INodeType {
 					returnData.push(...executionData);
 					continue;
 				}
-				throw error;
+				if (error instanceof NodeOperationError || error instanceof NodeApiError) {
+					throw error;
+				}
+				// An HTTP failure from the API: show its status and PageCrawl's own message.
+				if (error?.response || error?.statusCode || error?.httpCode) {
+					const message = error.response?.body?.message || error.response?.body?.error;
+					throw new NodeApiError(this.getNode(), error as JsonObject, {
+						itemIndex: i,
+						...(typeof message === 'string' ? { message } : {}),
+					});
+				}
+				throw new NodeOperationError(this.getNode(), error as Error, { itemIndex: i });
 			}
 		}
 

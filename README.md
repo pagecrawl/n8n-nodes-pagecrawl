@@ -29,6 +29,8 @@ The main node for interacting with PageCrawl.io API, supporting the following re
 
 #### Page Operations
 - **Get Page** - Get specific page configuration
+- **Get Many** - List the pages in a workspace: every active page, the paused ones, or one folder, optionally with each page's newest values
+- **Pause** / **Resume** - Stop or restart checking a page (sets the state, so a re-run does not flip it back)
 - **Create Page** - Create new tracked page with full configuration
 - **Create Simple Page** - Quick page creation with minimal options
 - **Update Page** - Update existing page configuration
@@ -40,6 +42,8 @@ The main node for interacting with PageCrawl.io API, supporting the following re
 - **Get Text Diff HTML** - Get text differences as HTML
 - **Get Text Diff Image** - Get text differences as an image
 - **Get Text Diff Markdown** - Get text differences as Markdown
+- **Get Text Diff Patch** - Get text differences as a unified patch
+- **Get Before and After Image** - The screenshots from before and after a change, side by side (a placeholder image, flagged in the output, when there is nothing to compare)
 
 #### Screenshot Operations
 - **Get Latest Screenshot** - Get the most recent full-page screenshot
@@ -47,18 +51,25 @@ The main node for interacting with PageCrawl.io API, supporting the following re
 - **Get Check Screenshot** - Screenshot for specific check
 - **Get Check Screenshot Diff** - Visual diff for specific check
 
+#### Data Source Operations
+- **Create** - Create a data source that records values you send instead of checking a URL, with optional named fields (number, price or text)
+- **Push Value** - Record one value, or several named values, through the data source's secret ingest URL. Pushing an unchanged value stores nothing new, so it is safe on a schedule.
+
+The PageCrawl node can also be used as a tool by n8n AI agents.
+
 Webhooks are managed by the PageCrawl Trigger node, which registers and removes
 its own webhook automatically. The main node has no webhook resource.
 
 ### PageCrawl Trigger Node
 
-Webhook trigger node that receives real-time notifications when changes are detected.
+Webhook trigger node that starts a workflow each time a check detects a change.
 
 Features:
 - Automatic webhook registration/deregistration
 - Configurable payload fields
 - Event filtering (changes, errors)
 - Simplified output option
+- Only deliveries signed by PageCrawl start the workflow: each one is checked against the webhook's signing secret, and deliveries older than five minutes are refused
 
 ## Example Workflows
 
